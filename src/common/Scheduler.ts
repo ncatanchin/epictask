@@ -132,5 +132,12 @@ const Scheduler = {
 
 if (module.hot) module.hot.accept(err => console.error("Hot reload failed", err))
 
+Object.assign(global,{
+  getScheduler: () => ({
+    intervals,
+    timeouts,
+    all: [...intervals.map(it => ({...it,type: 'interval'})),...timeouts.map(it => ({...it,type: 'timeout'}))]
+  })
+})
 
 export default Scheduler

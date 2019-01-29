@@ -1,4 +1,5 @@
 import * as React from "react"
+import * as CSS from 'csstype'
 import {CSSProperties} from "react"
 import { isFunction,isObject } from "typeguard"
 import getLogger from "../../common/log/Logger"
@@ -8,12 +9,13 @@ import { Color, makeMaterialPalette } from "./MaterialColors"
 import {
   StyledComponentProps,
   WithStylesOptions as MUIWithStyleOptions,
-  StyleRulesCallback, StyleRules
+  StyleRulesCallback, StyleRules, ClassNameMap
 } from "@material-ui/core/styles/withStyles"
 import {isArray} from "typedux"
 import {createMuiTheme} from "@material-ui/core"
 import withStyles from "renderer/styles/withStyles"
-
+import {toDashCase} from "common/ObjectUtil"
+import * as tinycolor from "tinycolor2"
 const
   $ = require("jquery"),
   log = getLogger(__filename)
@@ -33,8 +35,9 @@ let viewportSize:any = null
 /**
  * Themed properties - merged with material-ui
  */
-export interface IThemedProperties<T = any,K extends string = string> extends React.HTMLAttributes<T>,StyledComponentProps<K> {
-  theme?:Theme
+export interface IThemedProperties<ClassKey extends string = string, T = any, K extends string = string> extends React.HTMLAttributes<T>,StyledComponentProps<ClassKey> {
+  classes?: Partial<ClassNameMap<ClassKey>>
+	theme?:Theme
   viewportMode?:ViewportMode
   isMobile?:boolean
   isPortrait?:boolean
@@ -80,11 +83,20 @@ export type Style<P extends AnyCSSProperties = any> = Partial<P | {[className: s
 
 export type Styles = Array<Partial<Style>>
 
+
+
 export type NestedStyles = CSSProperties | {[key:string]: Style | Array<Styles | CSSProperties>} | Style | Styles
 
-export type StyleDeclaration = NestedStyles | CSSProperties
+export type CssClassMap<Classes extends string = string> = {[name in Classes]: NestedStyles}
 
-export type StyleCallback = (theme?:Theme) => StyleDeclaration
+export type StyleDeclaration<Classes extends string = string> =
+  CssClassMap<Classes> | Array<Partial<CssClassMap<Classes>>>
+// 	{
+// 	[key:Classes]:CSSProperties | {[selector:string]:CSSProperties}
+// }
+
+
+export type StyleCallback<Classes extends string = string> = (theme:Theme) => StyleDeclaration<Classes>
 
 
 /**
@@ -144,6 +156,10 @@ export function makeDimensionConstraint<P = any>(dim:'width'|'height',val:string
 
 }
 
+export const HeightProperties = ["height","maxHeight","minHeight"]
+
+export const WidthProperties = ["width","maxWidth","minWidth"]
+
 export function makeHeightConstraint<P = any>(val:string|number|CSSPropFn<P>):React.CSSProperties {
 	return makeDimensionConstraint<P>('height',val)
 }
@@ -202,7 +218,7 @@ export const PositionRelative: CSSProperties = {
 	position: 'relative'
 }
 
-export const PositionAbsolute = {
+export const PositionAbsolute: CSSProperties = {
 	position: 'absolute'
 }
 
@@ -229,7 +245,9 @@ export interface IThemePalette {
   pr: Color
 }
 
-
+export function alpha(color:CSS.Color,alpha:number):CSS.Color {
+	return tinycolor(color).setAlpha(alpha).toRgbString()
+}
 
 /**
  * Create a transition property with default config
@@ -248,7 +266,7 @@ export function makeTransition(props:string[]|string|null = null,duration = Tran
 	props = props || ['all']
 	return {
 		transition: (props as any)
-			.map(prop => `${prop} ${duration}ms ${easing}`)
+			.map(prop => `${toDashCase(prop)} ${duration}ms ${easing}`)
 			.join(', '),
 	}
 }
@@ -262,40 +280,53 @@ export function makeFlexAlign(alignItems,justifyContent = alignItems):React.CSSP
 
 
 
-export function makePaddingRem(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
-	return {
-		paddingTop: rem(top),
-		paddingRight: rem(right),
-		paddingBottom: rem(bottom),
-		paddingLeft: rem(left)
-	} as any
+export function makePadding(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
+  return {
+    paddingTop: top,
+    paddingRight: right,
+    paddingBottom: bottom,
+    paddingLeft: left
+  } as any
 }
 
 
+export function makePaddingRem(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
+	return makePadding(remToPx(top),remToPx(right),remToPx(bottom),remToPx(left)) as any
+}
+
+
+export function makeBorder(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
+  return {
+    borderTop: top,
+    borderRight: right,
+    borderBottom: bottom,
+    borderLeft: left
+  } as any
+}
 
 export function makeBorderRem(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
-	return {
-		borderTop: rem(top),
-		borderRight: rem(right),
-		borderBottom: rem(bottom),
-		borderLeft: rem(left)
-	} as any
+  return makeBorder(remToPx(top),remToPx(right),remToPx(bottom),remToPx(left)) as any
+}
+
+
+export function makeMargin(top:string|number = 0, right = top, bottom = top, left = right):StyleDeclaration {
+  return {
+    marginTop: top,
+    marginRight: right,
+    marginBottom: bottom,
+    marginLeft: left
+  } as any
 }
 
 export function makeMarginRem(top = 0, right = top, bottom = top, left = right):StyleDeclaration {
-	return {
-		marginTop: rem(top),
-		marginRight: rem(right),
-		marginBottom: rem(bottom),
-		marginLeft: rem(left)
-	} as any
+	return makeMargin(rem(top),rem(right),rem(bottom),rem(left))
 }
 
 export const PaddingProps = Object.keys(makePaddingRem(0)).map(key => key.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`))
 export const MarginProps = Object.keys(makeMarginRem(0)).map(key => key.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`))
 
 export function rem(val:number):string {
-	return `${val}rem`
+	return `${remToPx(val)}px`//${val}rem`
 }
 
 export const FlexAuto = makeFlex(0,0,'auto')
@@ -372,7 +403,7 @@ export function makeStyle(...styles):NestedStyles {
 }
 
 export function remToPx(rem:number):number {
-	return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+	return Math.round(rem * parseFloat(getComputedStyle(document.documentElement).fontSize))
 }
 
 export function directChild(className:string,state:string = ""):string {

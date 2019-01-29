@@ -16,10 +16,13 @@ module.exports = (isMain) => {
    * Create externals array
    */
   function makeExternals() {
-    const whitelist = isMain ? [] : [/webpack/,/react-hot/,/codemirror/,/highlight\.js/]
+    const whitelist = isMain ? [] :
+			///core-js/,/babel/,/sugar/,/material-ui/,/react-hot/,/source-map/
+			[/webpack/,/codemirror/,/highlight\.js/,/octokit/,/node-fetch/]
   	return nodeExternals({
-			whitelist
-		})//['fs', 'module']
+      whitelist
+    })
+		//['fs', 'module']
   }
 
 	const config = {
@@ -34,7 +37,8 @@ module.exports = (isMain) => {
 				main: Path.resolve(rootPath, 'src', 'main'),
 				renderer: Path.resolve(rootPath, 'src', 'renderer'),
 				test: Path.resolve(rootPath, 'src', 'test'),
-				'react-dom': '@hot-loader/react-dom'
+				'react-dom': '@hot-loader/react-dom',
+				'node-fetch': "common/Fetch"
 			},
 			extensions: ['.webpack.js', '.web.js', '.js', '.ts', '.tsx']
 		},
@@ -70,6 +74,12 @@ module.exports = (isMain) => {
 		module: {
 
 			rules: [
+        // {
+        //   test: /\.js$/,
+        //   //exclude: /(typelogger|node_modules)/,
+        //   use: ["source-map-loader"],
+        //   enforce: "pre"
+        // },
 				{
 					test: /^\.(scss|css)$/,
 					use: ['style-loader!css-loader!sass-loader']
@@ -85,11 +95,13 @@ module.exports = (isMain) => {
 							presets: [
 								[
 									"@babel/preset-env",
-									{
-										targets: {
-											electron: "3.2.2"
-										}
-									} // or whatever your project requires
+                  {
+                    debug: true,
+                    targets: {
+                      electron: "4.0.2"
+                    }
+                  }
+									// } // or whatever your project requires
 								],
 								"@babel/preset-typescript",
 								"@babel/preset-react"
@@ -99,6 +111,7 @@ module.exports = (isMain) => {
 								["@babel/plugin-proposal-decorators", {legacy: true}],
 								["@babel/plugin-proposal-class-properties", {loose: true}],
 								["@babel/plugin-syntax-dynamic-import"],
+
 								// [
 								// 	"@babel/plugin-transform-runtime",
 								// 	{
@@ -109,20 +122,30 @@ module.exports = (isMain) => {
 								// 	}
 								// ],
 								"react-hot-loader/babel"
-							]
+							],
+              sourceMaps: "both"
 						}
 					}
 				},
-				{
-					test: /\.jsx?$/,
-					include: /node_modules/,
-					use: ['react-hot-loader/webpack'],
-				},
-        {
-          test: /\.js$/,
-          use: ["source-map-loader"],
-          enforce: "pre"
-        }
+        // {
+        //   test: /\.tsx?$/,
+        //   exclude: [/node_modules/],
+        //   loader: 'ts-loader',
+        //   options: {
+        //     transpileOnly: true,
+        //     experimentalWatchApi: true
+        //   }
+        // }
+				// {
+				// 	test: /\.jsx?$/,
+				// 	include: /node_modules/,
+				// 	use: ['react-hot-loader/webpack'],
+				// },
+        // {
+        //   test: /\.([jt])sx?$/,
+        //   use: ["source-map-loader"],
+        //   enforce: "pre"
+        // }
 			]
 		},
 	}

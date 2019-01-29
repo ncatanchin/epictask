@@ -1,5 +1,5 @@
 import * as React from 'react'
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 
 import {
   CommandContainerElement as CommandContainer,
@@ -46,7 +46,7 @@ export function useFocused(elementRef:React.RefObject<HTMLElement>):boolean {
     onFocusChanged = useCallback(() => {
       if (!elementRef.current) return
       setFocused(checkFocused(elementRef))
-    },[elementRef.current])
+    },[elementRef,elementRef.current])
 
   useEffect(() => {
     const handler = onFocusChanged
@@ -63,15 +63,18 @@ export function useCommandManager(
 	id: string,
 	commandItemsCreator:CommandItemsCreator,
 	container:React.RefObject<CommandContainer>,
-  providedOptions:Partial<ICommandManagerOptions> | null = {...DefaultCommandManagerOptions}
+  providedOptions?:Partial<ICommandManagerOptions> | null
 ):CommandManagerRefs {
+  if (!providedOptions)
+    providedOptions = {...DefaultCommandManagerOptions}
 
 	const
     options = {
 	    ...DefaultCommandManagerOptions,
       ...providedOptions
     },
-    registered = useRef(false),
+    registered = useRef(false),//getCommandManager().isRegistered(id)
+    commandItemsCreatorRef = useRef<CommandItemsCreator>(commandItemsCreator),
 		parts = useMemo<CommandManagerRefs>(() => {
 			const commandManager = getCommandManager()
 			return {
@@ -81,7 +84,10 @@ export function useCommandManager(
           tabIndex: options.tabIndex,
           onFocus: (event) => {
             if (!registered.current) {
-              log.warn("Not registered")
+              log.debug("Not registered")
+              return
+            } else if (commandManager.inStack(id)) {
+              log.debug("in stack")
               return
             }
 
@@ -92,9 +98,11 @@ export function useCommandManager(
 						} else {
 							if (event) {
 								event.persist()
-                setImmediate(() => {
-                  commandManager.setContainerFocused(id, true, event)
-                })
+                commandManager.updateFocusedContainers()
+                // setImmediate(() => {
+                //   //commandManager.setContainerFocused(id, true, event)
+                //   commandManager.updateFocusedContainers()
+                // })
 							}
 						}
 					},
@@ -102,48 +110,88 @@ export function useCommandManager(
             if (!registered.current) {
               log.warn("Not registered")
               return
+            } else if (commandManager.inStack(id)) {
+              log.debug("in stack")
+              return
             }
 
 
             const focused = commandManager.isFocused(id)
 
-            log.debug(`blur`,focused, id, event, container.current)
+            log.debug(`blur`,focused, id, event, container.current, document.activeElement)
 
-            if (!focused) {
-              log.debug(`Already blurred`)
+            if (focused || !event.nativeEvent.target) {
+              log.debug(`Blue (still focused)`)
             } else {
               if (event) {
+                registered.current = false
                 event.persist()
-                setImmediate(() => {
-                  commandManager.setContainerFocused(id, false, event)
-                })
+                commandManager.updateFocusedContainers()
+                // setImmediate(() => {
+                //   //commandManager.setContainerFocused(id, false, event)
+                //   commandManager.updateFocusedContainers()
+                // })
               }
 
             }
 					},
         }
       } as CommandManagerRefs
-		},[registered.current,id,container.current])
+		},[id,container.current])
+
+
+  // UPDATE PREVIOUS REF IF NEEDED
+  useEffect(() => {
+    if (commandItemsCreatorRef.current !== commandItemsCreator) {
+      commandItemsCreatorRef.current = commandItemsCreator
+    }
+  }, [commandItemsCreator])
+
+  const
+    commandManager = getCommandManager(),
+    updateCommandItems = useCallback(() => {
+      if (!commandItemsCreatorRef.current || !container.current || !document.querySelector(`#${id}`))
+        return
+
+      const
+        commandManager = getCommandManager(),
+        {menuItems = [], commands = []} = commandItemsCreatorRef.current(new CommandContainerBuilder(container.current,id)),
+        focused = commandManager.isFocused(id)
+
+      // if (registered.current && !focused) {
+      //   return
+      // }
+
+      log.debug("Updating items", id, container.current, commands, menuItems, options, providedOptions)
+      commandManager.registerContainerItems(id, container.current, commands, menuItems, options)
+      registered.current = true
+    },[commandItemsCreatorRef.current])
+
+  useEffect(() => {
+    const commandManager = getCommandManager()
+    // if (!registered.current || !commandManager.isRegistered(id)) {
+    //   commandManager.registerContainerItems(id, container.current, commands, menuItems, options)
+    // }
+    // if (commandManager.isRegistered(id)) {
+    //
+    // }
+    updateCommandItems()
+    return () => {
+      registered.current = false
+      commandManager.unregisterContainer(id, container.current)
+    }
+  },[id,container.current, commandItemsCreatorRef.current,updateCommandItems])
 
 
   useEffect(() => {
     if (registered.current || !container.current || !id)
-      return () => {}
+      return
 
-    const
-      commandManager = getCommandManager(),
-      {menuItems = [],commands = []} = commandItemsCreator(new CommandContainerBuilder(container.current))
-
-    log.debug("Registering",id,container.current,commands,menuItems,options,providedOptions)
-    commandManager.registerContainerItems(id,container.current,commands,menuItems, options)
+    updateCommandItems()
     registered.current = true
 
-    return () => {
-      log.debug("Unregistering",id,container.current,commands,menuItems)
-      registered.current = false
-      commandManager.unregisterContainer(id,container.current)
-    }
-  }, [container,container.current,id])
+    return
+  },[parts,id,container,updateCommandItems])
 
   return parts
 }

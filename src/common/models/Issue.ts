@@ -10,9 +10,12 @@ import {convertEnumValuesToString} from "common/ObjectUtil"
 import {IUser} from "common/models/User"
 import {IComment} from "common/models/Comment"
 
+export type IssueState = "open" | "closed"
+
 export interface IIssue extends IssuesCreateResponse {
 	labels: Array<ILabel>
 	milestone: IMilestone
+  state: IssueState
 }
 
 export const IssueIndexes = {
@@ -77,18 +80,20 @@ export const IssueEventTypeNameMap = convertEnumValuesToString(IssueEventType)
 
 export type UIIssueEventTypes =
 	"assigned" |
-	//"closed" |
+	"closed" |
 	"demilestoned" |
 	"labeled" |
-	//"mentioned" |
+	"mentioned" |
 	//"merged" |
 	"milestoned" |
-	//"renamed" |
-	//"referenced" |
+	"renamed" |
+	"referenced" |
 	//"marked_as_duplicate" |
 	"unlabeled" |
-  "unassigned"
-	//"reopened" |
+  "unassigned" |
+	"reopened" |
+  "subscribed"|
+  "unsubscribed"
 	//"unmarked"
 
 

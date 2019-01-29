@@ -6,7 +6,7 @@ import {StyledComponent} from "renderer/components/elements/StyledComponent"
 const log = getLogger(__filename)
 
 
-function baseStyles(theme: Theme): NestedStyles {
+function baseStyles(theme: Theme): StyleDeclaration {
 
   return {
     "@global": theme.highlightjs

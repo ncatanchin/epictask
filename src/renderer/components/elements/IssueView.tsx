@@ -1,8 +1,8 @@
 import * as React from "react"
-import {useCallback, useEffect, useState} from "react"
+import {useCallback, useEffect, useMemo, useState} from "react"
 import getLogger from "common/log/Logger"
-import {IThemedProperties} from "renderer/styles/ThemedStyles"
-import {StyledComponent} from "renderer/components/elements/StyledComponent"
+import {IThemedProperties, remToPx} from "renderer/styles/ThemedStyles"
+import {Selectors, StyledComponent, StyledComponentProducer} from "renderer/components/elements/StyledComponent"
 import {IIssue, IIssueEventData} from "common/models/Issue"
 import {getIssueEvents} from "renderer/net/IssueAPI"
 import baseStyles from "renderer/components/elements/IssueDetails.styles"
@@ -11,11 +11,16 @@ import IssueInfo from "renderer/components/elements/IssueInfo"
 import {dataSelector, selectedIssuesSelector} from "common/store/selectors/DataSelectors"
 import FocusedDiv from "renderer/components/elements/FocusedDiv"
 import {useRef} from "react"
-import {useCommandManager} from "renderer/command-manager-ui"
+import {useCommandManager, useFocused} from "renderer/command-manager-ui"
 import CommandContainerIds from "renderer/CommandContainers"
-import {FocusedTimelineIdContext} from "renderer/components/elements/IssueViewContext"
-import {IComment} from "common/models/Comment"
 import {getValue} from "typeguard"
+import IssueViewController from "renderer/controllers/IssueViewController"
+import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
+import {makeCommandManagerAutoFocus} from "common/command-manager"
+import {
+  ControllerContext,
+  ControllerProviderState, useController, withController
+} from "renderer/controllers/Controller"
 
 const log = getLogger(__filename)
 
@@ -32,31 +37,67 @@ interface SP {
 const selectors = {
   issues: selectedIssuesSelector,
   data: dataSelector(state => state.issueData)
-}
+} as Selectors<P, SP>
 
 
-export default StyledComponent<P, SP>(baseStyles, selectors)(function IssueView(props: P & SP): React.ReactElement<P & SP> {
+export default StyledComponent<P, SP>(baseStyles, selectors, {
+  extraWrappers: {
+    inner: [withController<P & SP,IssueViewController>(
+      props => new IssueViewController(props.issues[0] ? props.issues[0].id : -1),
+      ["issues"])]
+  }
+})(function IssueView(props: P & SP): React.ReactElement<P & SP> {
   const
     {classes, data, issues} = props,
     issue = issues[0],
     id = CommandContainerIds.IssueView,
+    [controller,setController] = useController(),
+    updateController = setController,
+    providerProps = [controller,updateController],
     containerRef = useRef<HTMLDivElement | null>(null),
-    [focusedId, setFocusedId] = useState<number>(issue.id),
-    moveFocus = useRef<(increment: number) => void>(null),
+    moveFocusRef = useRef<(increment: number) => void>(null),
+    editRef = useRef<() => void>(null),
+    newCommentRef = useRef<() => void>(null),
+    focused = useFocused(containerRef),
+    focusedId = getValue(() => controller.focusedContentId, -1),
+    setFocusedId = useCallback((id: number) =>
+      !controller.isEditingContent() &&
+      updateController(controller.setFocusedContentId(id)),
+      [controller,updateController]
+    ),
+    builder = useCallback(builder => builder
+        .command("Enter", () => moveFocusRef.current(1), {
+          overrideInput: false
+        })
+        .command("ArrowDown", () => moveFocusRef.current(1), {
+          overrideInput: false
+        })
+        .command("ArrowUp", () => moveFocusRef.current(-1), {
+          overrideInput: false
+        })
+        .command("e", () => editRef.current(), {
+          overrideInput: false
+        })
+        .command("m", () => newCommentRef.current(), {
+          overrideInput: false
+        })
+        .make()
+    ,[]),
     {props: commandManagerProps} = useCommandManager(
       id,
-      builder => {
-        return builder
-          .command("ArrowDown", () => moveFocus.current(1), {
-            overrideInput: false
-          })
-          .command("ArrowUp", () => moveFocus.current(-1), {
-            overrideInput: false
-          })
-          .make()
-      },
-      containerRef
+      builder,
+      containerRef,
+      {
+        autoFocus: makeCommandManagerAutoFocus(100)
+      }
     )
+
+  useEffect(() => {
+    if (controller && controller.issueId !== getValue(() => issue.id)) {
+      log.info("Resetting controller",controller,issue)
+      updateController(controller.setIssueId(!issue ? -1 : issue.id))
+    }
+  }, [issue, controller])
 
   useEffect(() => {
     const
@@ -67,7 +108,24 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function IssueView(
         )],
       contentsLength = Math.max(contents.length - 1, 0)
 
-    moveFocus.current = (increment: number) => {
+    if (focused && focusedId === -1) {
+      updateController(controller.setFocusedContentId(issue.id))
+    }
+
+    newCommentRef.current = () => {
+      if (!controller.isEditingContent())
+        updateController(controller.setNewComment())
+    }
+
+    editRef.current = () => {
+      log.debug("Edit item", controller)
+      if (!controller.isEditingContent()) {
+        updateController(controller.setEditContentId(controller.focusedContentId))
+      }
+    }
+
+    moveFocusRef.current = (increment: number) => {
+      log.debug("Move focus", focused, controller, increment, contents)
       const focusedIndex = contents.findIndex(content => content.id === focusedId)
       let newIndex: number = 0
       if (increment > 0) {
@@ -80,44 +138,47 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function IssueView(
       newIndex = Math.max(0, Math.min(newIndex, contentsLength))
 
       const newFocusedId = getValue(() => contents[newIndex].id)
-      log.info("New focused id", newFocusedId, focusedId, contents, focusedIndex)
+      log.debug("New focused id", newFocusedId, focusedId, contents, focusedIndex)
       if (!newFocusedId || newFocusedId === focusedId) return
 
-      setFocusedId(newFocusedId)
-      const container = containerRef.current
-      if (container) {
-        const
-          contentElementId = `issue-view-content-${newFocusedId}`,
-          contentElement = container.querySelector(`#${contentElementId}`)
-
-        if (!contentElement) {
-          log.warn("Unable to find content element", contentElementId)
-          return
-        }
-
-        log.info("Scrolling to ", contentElementId, " at ", contentElement.scrollTop, " element ", contentElement)
-        contentElement.parentElement.scrollTo(0, contentElement.scrollTop)
-
-      }
+      const newController = controller.setFocusedContentId(newFocusedId)
+      log.debug("Move focus controller update", newController, controller)
+      updateController(newController)
     }
-  }, [data, issues, focusedId])
+  }, [controller, focused, data, issue, issues, focusedId])
 
   useEffect(() => {
-    setFocusedId(getValue(() => issue.id, 0))
-  }, [data.timeline.length, issue])
+    const container = containerRef.current
+    if (container) {
+      const
+        contentElementId = `issue-view-content-${focusedId}`,
+        contentElement = container.querySelector(`#${contentElementId}`)
 
-  log.info("View", focusedId, moveFocus,containerRef)
+      if (!contentElement) {
+        log.warn("Unable to find content element", contentElementId)
+        return
+      }
+
+      const offsetTop = Math.max(0, (contentElement as any).offsetTop - remToPx(1))
+      log.debug("Scrolling to ", contentElementId, " at ", offsetTop, " element ", contentElement)
+      contentElement.parentElement.scrollTo({left: 0, top: offsetTop, behavior: "smooth"})
+    }
+  }, [focusedId])
 
   return <FocusedDiv
     classes={{
       root: classes.root
     }}
   >
-    <FocusedTimelineIdContext.Provider value={focusedId}>
-      <div tabIndex={-1} id={id} ref={containerRef} className={classes.root} {...commandManagerProps}>
+
+    <div tabIndex={-1} id={id} ref={containerRef} className={classes.root} {...commandManagerProps}>
+
+
         <IssueInfo issue={issue}/>
         <IssueEvents issue={issue} data={data}/>
-      </div>
-    </FocusedTimelineIdContext.Provider>
+
+
+    </div>
+
   </FocusedDiv>
 })

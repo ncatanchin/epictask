@@ -8,11 +8,10 @@ import MenuItem from '@material-ui/core/MenuItem'
 
 import withStyles, {StyledComponentProps} from "@material-ui/core/styles/withStyles"
 import {getValue} from "typeguard"
-import baseStyles from "renderer/components/elements/AutoCompleteSelect.styles"
+import baseStyles, {AutoCompleteSelectClasses} from "renderer/components/elements/AutoCompleteSelect.styles"
 import {elevationStyles} from "renderer/components/elements/Elevation"
 import {Props as SelectProps} from "react-select/lib/Select"
 import ReactSelect from "react-select"
-import {IRepo} from "common/models/Repo"
 import {StyledComponent, StyledElement} from "renderer/components/elements/StyledComponent"
 import {CommandManagerProps} from "renderer/command-manager-ui"
 
@@ -25,7 +24,7 @@ const NoOptionsMessage = withStyles(baseStyles as any)((props: InnerP): JSX.Elem
   return (
     <Typography
       color="textSecondary"
-      className={props.classes.noOptionsMessage}
+      className={props.classes.noOptionMessage}
       {...props.innerProps}
     >
       {props.children}
@@ -164,7 +163,7 @@ const SelectComponents = {
   ValueContainer
 }
 
-interface InnerP extends IThemedProperties {
+interface InnerP extends IThemedProperties<AutoCompleteSelectClasses> {
   innerProps?: any
   isFocused?: boolean
   isSelected?: boolean
@@ -173,9 +172,9 @@ interface InnerP extends IThemedProperties {
   selectProps?: any
 }
 
-interface P<T = any> extends SelectProps<T>, StyledComponentProps<string> {
+interface P<T = any> extends SelectProps<T>, StyledComponentProps<AutoCompleteSelectClasses> {
   commandManagerProps?: CommandManagerProps
-  selectRef?: React.Ref<ReactSelect<IRepo>> | React.RefObject<ReactSelect<IRepo>>
+  selectRef?: React.Ref<ReactSelect<T>> | React.RefObject<ReactSelect<T>>
   viewportMode?: ViewportMode
   isMobile?: boolean
   isPortrait?: boolean
@@ -199,12 +198,11 @@ interface P<T = any> extends SelectProps<T>, StyledComponentProps<string> {
   }>
 }
 
-// interface S<T> {
-//   options: Array<T>
-// }
+interface SP {
+}
 
 
-export default StyledComponent<P>(baseStyles, {withTheme: true, withRef: true})(function AutoCompleteSelect<T>(props:P<T>): StyledElement<P<T>> {
+export default StyledComponent<P,SP>(baseStyles, {withTheme: true, withRef: true})(function AutoCompleteSelect<T>(props:P<T>): StyledElement<P<T>> {
   const
     {
       id,
@@ -241,8 +239,6 @@ export default StyledComponent<P>(baseStyles, {withTheme: true, withRef: true})(
     ...(styles || {})
   }),[])
 
-  // const {props = {}} = id ? useCommandManager(id,builder => builder.make(),ReactDOM.findDOMNode(innerRef as any)) : {props: {}}
-  //
   return <div
     id={id}
     ref={innerRef}

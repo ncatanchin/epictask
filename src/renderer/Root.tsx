@@ -6,8 +6,6 @@ import * as React from "react"
 //import {makeTransition, mergeStyles, rem, remToPx} from "renderer/styles/ThemedStyles"
 import {hot} from 'react-hot-loader/root'
 
-const log = getLogger(__filename)
-
 
 
 import App from "renderer/components/App"
@@ -17,6 +15,10 @@ import getLogger from "common/log/Logger"
 
 import ThemeProvider from '@material-ui/styles/ThemeProvider'
 import HighlightStyles from "renderer/components/markdown/HighlightStyles"
+
+
+const log = getLogger(__filename)
+
 
 // const App = Loadable({
 //   loader: () => import("renderer/components/App"),

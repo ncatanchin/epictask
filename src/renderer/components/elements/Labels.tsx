@@ -136,7 +136,6 @@ export default class Labels extends React.Component<P, S> {
 
     return <div
       className={mergeClasses(classes.root, wrap && "wrap", className)}
-      ref={this.setAnchorEl}
     >
       <div className={classes.spacer}/>
       {labels.map((label, index) =>
@@ -154,26 +153,11 @@ export default class Labels extends React.Component<P, S> {
             className={classes.add}
             onClick={this.onOpenSelect}
             aria-owns={open ? id : null}
+            ref={this.setAnchorEl}
           >
             <Octicon className="icon" icon={TagIcon}/>
           </div>
         </Tooltip>
-        {/*<BaseChip*/}
-          {/*color={theme.components.Labels.colors.addBg}*/}
-          {/*label="+"*/}
-          {/*variant="small"*/}
-          {/*aria-owns={open ? id : null}*/}
-          {/*actionIcon={<div className={classes.add}>*/}
-            {/*<Octicon className="icon" icon={TagIcon}/>*/}
-          {/*</div>}*/}
-          {/*onAction={this.onOpenSelect}*/}
-          {/*className={classes.chip}*/}
-          {/*onClick={this.onOpenSelect}*/}
-          {/*classes={{*/}
-            {/*chip: classes.chip,*/}
-            {/*label: classes.label*/}
-          {/*}}*/}
-        {/*/>*/}
         <PopoverSelect
           id={id}
           open={open}

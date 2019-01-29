@@ -17,7 +17,7 @@ import {LineWidth} from "csstype"
 const log = getLogger(__filename)
 
 
-function baseStyles(theme: Theme): NestedStyles {
+function baseStyles(theme: Theme): StyleDeclaration {
   const
     {palette} = theme,
     {primary, secondary} = palette

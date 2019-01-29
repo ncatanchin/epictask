@@ -1,9 +1,17 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
 import {
-  Fill, FillHeight,
-  FlexRowCenter,
-  IThemedProperties, makeTransition, mergeClasses, NestedStyles, PositionAbsolute, PositionRelative
+  Fill,
+  FillHeight, FillWidth, FlexAuto, FlexColumn,
+  FlexRowCenter, FlexScale,
+  IThemedProperties, makeHeightConstraint,
+  makeTransition,
+  mergeClasses,
+  NestedStyles, OverflowHidden,
+  PositionAbsolute,
+  PositionRelative,
+  StyleCallback,
+  StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {IIssue} from "common/models/Issue"
 import {IDataSet} from "common/Types"
@@ -21,6 +29,18 @@ import {issuesSortedAndFilteredSelector} from "common/store/selectors/DataSelect
 import {useFocused} from "renderer/command-manager-ui/CommandComponent"
 import FocusedDiv from "renderer/components/elements/FocusedDiv"
 import CommandContainerIds from "renderer/CommandContainers"
+import IssueViewController from "renderer/controllers/IssueViewController"
+import {confirmDialog} from "renderer/util/UIHelper"
+import {StyleRules} from "@material-ui/core/styles"
+import SearchProviderField from "renderer/components/elements/SearchProviderField"
+import issueSearchProvider from "renderer/search/SearchIssues"
+import {ISearchChip} from "renderer/search/Search"
+import {
+  searchIssuesChipsSelector,
+  searchIssuesDataSetSelector,
+  searchIssuesKey
+} from "renderer/store/selectors/UISelectors"
+import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
 
 const log = getLogger(__filename)
 
@@ -29,22 +49,47 @@ const commandManagerOptions = {
   autoFocus: makeCommandManagerAutoFocus(50)
 }
 
-function baseStyles(theme: Theme): NestedStyles {
+type Classes = "root" | "focused" | "list" | "search"
+
+function baseStyles(theme: Theme): StyleDeclaration<Classes> {
   const
     {palette} = theme,
     {primary, secondary} = palette
 
   return {
-    root: [Fill, PositionRelative, {}],
-    focused: [makeTransition('box-shadow'),Fill, PositionAbsolute, {
+    root: {
+      ...Fill,
+      ...PositionRelative,
+      ...FlexColumn,
+      ...OverflowHidden
+    },
+    list: {
+      ...FlexScale,
+      ...FillWidth,
+      maxHeight: "auto",
+      height: "auto",
+      minHeight: 0,
+      overflowY: "hidden",
+      overflowX: "hidden"
+    },
+    search: {
+      ...FlexAuto,
+      ...FillWidth
+    },
+    focused: {
+      ...makeTransition('box-shadow'),
+      ...Fill,
+      ...PositionAbsolute,
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
       pointerEvents: "none",
       boxShadow: "none",
-      "&.active": [theme.focus]
-    }]
+      "&.active": {
+        ...theme.focus
+      }
+    }
   }
 }
 
@@ -57,25 +102,24 @@ interface P extends IThemedProperties {
 interface SP {
   sortedIssues: IDataSet<IIssue>
   selectedIssueIds: Array<number>
+  searchChips:Array<ISearchChip>
+  controller: IssueViewController | null
 }
 
 export default StyledComponent<P,SP>(baseStyles,{
-  sortedIssues: issuesSortedAndFilteredSelector,
-  selectedIssueIds: selectedIssueIdsSelector
+  sortedIssues: searchIssuesDataSetSelector,
+  selectedIssueIds: selectedIssueIdsSelector,
+  controller: (state:IRootRendererState) => state.UIState.issueViewController,
+  searchChips: searchIssuesChipsSelector
 })(function IssueList(props: P & SP): React.ReactElement<P & SP> {
   const
-    {classes, selectedIssueIds, sortedIssues, ...other} = props,
+    {classes, searchChips, controller, selectedIssueIds, sortedIssues, ...other} = props,
     id = CommandContainerIds.IssueList,
     makeSelectedIndexes = ():Array<number> => selectedIssueIds
       .map(id => sortedIssues.data.findIndex(issue => issue.id === id) as number)
       .filter(index => index !== -1)
       .sort(),
-    [selectedIndexes,setSelectedIndexes] = useState(makeSelectedIndexes)
-
-  useEffect(() => {
-    const indexes = makeSelectedIndexes()
-    setSelectedIndexes(prevIndexes => isEqual(indexes,selectedIndexes) ? prevIndexes : indexes)
-  },[sortedIssues,selectedIssueIds])
+    selectedIndexes = makeSelectedIndexes()
 
 
   const rowRenderer = useCallback((rowProps: ListRowProps): React.ReactNode => {
@@ -109,18 +153,32 @@ export default StyledComponent<P,SP>(baseStyles,{
 
 
 
-  const updateSelectedIssues = useCallback((dataSet: IDataSet<IIssue>,indexes:Array<number>):void => {
-    setImmediate(() => {
+  const
+    updateSelectedIssues = useCallback(async (dataSet: IDataSet<IIssue>,indexes:Array<number>):Promise<void> => {
       const
         {data} = dataSet,
         ids = indexes.map(index => getValue(() => data[index].id)).filter(id => !!id)
 
-      setSelectedIndexes(indexes)
+
       new AppActionFactory().setSelectedIssueIds(ids)
-    })
-  },[setSelectedIndexes])
+    },[controller]),
+    //[searchChips, setSearchChips] = useState<Array<ISearchChip<IIssue,number,any>>>([]),
+    onSearchChipsChanged = useCallback((newSearchChips:Array<ISearchChip<IIssue,number,any>>) => {
+      log.info("New search chips", newSearchChips)
+      new UIActionFactory().updateSearch(searchIssuesKey,newSearchChips)
+      //setSearchChips(newSearchChips)
+    },[])
 
   return <FocusedDiv classes={{root:classes.root}}>
+    <SearchProviderField
+      id="issue-search-field"
+      classes={{
+        root: classes.search
+      }}
+      provider={issueSearchProvider}
+      onChanged={onSearchChipsChanged}
+      chips={searchChips}
+    />
     <List
     id={id}
     dataSet={sortedIssues}
@@ -129,6 +187,9 @@ export default StyledComponent<P,SP>(baseStyles,{
     selectedIndexes={selectedIndexes}
     rowRenderer={rowRenderer}
     rowHeight={70}
+    classes={{
+      root: classes.list
+    }}
     {...other as any}
   />
   </FocusedDiv>

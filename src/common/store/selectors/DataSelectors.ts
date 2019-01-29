@@ -7,7 +7,7 @@ import {IDataSet, makeDataSet} from "common/Types"
 import getLogger from "common/log/Logger"
 import {appSelector} from "common/store/selectors/AppSelectors"
 import {IIssue} from "common/models/Issue"
-import moment from "moment"
+import * as moment from "moment"
 
 const log = getLogger(__filename)
 

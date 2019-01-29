@@ -15,12 +15,45 @@ import {ICollaborator, IRepo} from "common/models/Repo"
 import {IComment} from "common/models/Comment"
 import * as _ from "lodash"
 import getLogger from "common/log/Logger"
-import moment from "moment"
+import * as moment from "moment"
 import {IMilestone} from "common/models/Milestone"
 import {ILabel} from "common/models/Label"
 import {Omit} from "common/Types"
 
 const log = getLogger(__filename)
+
+
+export async function createComment(issue:IIssue | number, body:string):Promise<IComment> {
+  if (isNumber(issue)) {
+    issue = await db.issues.get(issue)
+  }
+
+  const
+    issueId = issue.id,
+    issueNumber = issue.number
+
+
+  const
+    gh = getAPI(),
+    repo = await db.repos.where("url").equals(issue.repository_url).first(),
+    newComment = (await gh.issues.createComment({
+      owner: repo.owner.login,
+      repo: repo.name,
+      number: issueNumber,
+      body
+    })).data,
+    comment = {...newComment,issue_id: issueId} as IComment
+
+
+  await db.comments.put(comment)
+
+  if (getValue(() => selectedIssuesSelector(getStoreState()).some(selectedIssue => selectedIssue.id === issueId))) {
+    new DataActionFactory().setIssueEventData(await getIssueEvents(issueId))
+  }
+
+
+  return comment
+}
 
 export async function patchComment(issue:IIssue | number, comment:IComment | number, body:string):Promise<IComment> {
   if (isNumber(issue)) {
@@ -36,20 +69,21 @@ export async function patchComment(issue:IIssue | number, comment:IComment | num
   const
     gh = getAPI(),
     repo = await db.repos.where("url").equals(issue.repository_url).first(),
-    updatedComment = await gh.issues.updateComment({
+    updatedComment = (await gh.issues.updateComment({
       owner: repo.owner.login,
       repo: repo.name,
       body,
       comment_id:comment.id
-    }),
+    })).data,
     newComment = {...comment,...updatedComment,issue_id: comment.issue_id}
 
 
   await db.comments.put(newComment)
 
   if (getValue(() => selectedIssuesSelector(getStoreState()).some(selectedIssue => selectedIssue.id === issueId))) {
-    new DataActionFactory().updateComment(newComment)
+    new DataActionFactory().setIssueEventData(await getIssueEvents(issueId))
   }
+
 
   return newComment
 }

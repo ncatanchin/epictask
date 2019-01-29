@@ -1,5 +1,6 @@
 ///<reference path="../../typings/custom.d.ts"/>
 //import "@babel/polyfill"
+import "source-map-support/register"
 import {app, BrowserWindow, globalShortcut, session} from "electron"
 import "common/util/Ext"
 import createMenu from "./Menu"

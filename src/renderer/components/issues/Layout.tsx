@@ -41,8 +41,8 @@ import {useCommandManager} from "renderer/command-manager-ui"
 import {CommandContainerBuilder, CommandType, getCommandManager, ICommandContainerItems} from "common/command-manager"
 import IssueDetails from "renderer/components/elements/IssueDetails"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
-import IssueEditDialog from "renderer/components/elements/IssueEditDialog"
 import CommandContainerIds, {CommandContainer} from "renderer/CommandContainers"
+import {showIssueEditDialog} from "renderer/components/elements/IssueEditDialog"
 
 const AvatarDefaultURL = require("renderer/assets/images/avatar-default.png")
 
@@ -121,7 +121,7 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
     repoSelectRef = useRef<any>(null),
     id = CommandContainerIds.IssuesLayout,
     [repoSelectOpen, setRepoSelectOpen] = useState<boolean>(false),
-    {props: commandManagerProps} = useCommandManager(id, (builder: CommandContainerBuilder): ICommandContainerItems => {
+    {props: commandManagerProps} = useCommandManager(id, useCallback((builder: CommandContainerBuilder): ICommandContainerItems => {
         const commandManager = getCommandManager()
 
       function makeContainerFocusHandler(container: CommandContainer.IssueList | CommandContainer.IssueView): () => void {
@@ -160,16 +160,13 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
           .command(
             "CommandOrControl+n",
             (cmd, event) => guard(() => {
-              if (getStoreState().AppState.editing.open)
+              if (getRendererStoreState().UIState.dialogs.length)
                 return
 
-              new AppActionFactory().setEditing({
-                open:true,
-                issue: null
-              })
+              showIssueEditDialog(null)
             }),
             {
-              name: "Open repo",
+              name: "New Issue",
               type: CommandType.App,
               hidden: false,
               overrideInput: true
@@ -182,7 +179,7 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
             overrideInput: false
           })
           .make()
-      },
+      },[repoSelectRef]),
       rootRef
     )
 
@@ -247,8 +244,6 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
         renderRepoIsNotEnabled() :
         renderIssues()
     }
-
-    <IssueEditDialog />
   </div>
 
 })

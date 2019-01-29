@@ -23,14 +23,14 @@ let Threshold = LogLevel.info
  * @returns {string}
  */
 export function getLogger(name:string):TypeLogger.ILogger {
-	
+
 	name = name.split('/').pop()!
-	return LogLevelNames.reduce((logger,level) => {
+	return LogLevelNames.reduce((logger:TypeLogger.ILogger,level) => {
 		logger[level as any] = (...args:any[]) => {
 			// const msgLevel = (LogLevel as any)[level as any] as LogLevel
 			// if (msgLevel < Threshold)
 			// 	return
-			
+
 			// if (isDefined(getStoreState) && [LogLevel.info,LogLevel.error,LogLevel.warn].includes(msgLevel)) {
 			//   const
 			//     error = args.filter((arg:any) => arg instanceof Error),
@@ -39,7 +39,7 @@ export function getLogger(name:string):TypeLogger.ILogger {
 			//   //LogFirehose.log(msgLevel,name,message,error.length ? error[0] : null)
 			//
 			// }
-			
+
 			//baseLogger[level](name,...args)
 			if (console[level as any]) {
 				console[level as any](name,...args)
@@ -50,7 +50,7 @@ export function getLogger(name:string):TypeLogger.ILogger {
 		return logger
 	},{
 		isDebugEnabled
-	} as any)
+	} as any) as TypeLogger.ILogger
 }
 
 export function setThreshold(threshold:LogLevel):void {

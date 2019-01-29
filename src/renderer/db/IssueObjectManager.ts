@@ -15,7 +15,8 @@ import * as BBPromise from 'bluebird'
 import {getLabels, getMilestones, getRepoParams} from "renderer/net/RepoAPI"
 import {IComment} from "common/models/Comment"
 import {findIssueIdFromComment, findIssueIdFromEvent} from "renderer/net/IssueAPI"
-import moment from "moment"
+import * as moment from "moment"
+import {makeStatusMessage, pushStatusMessage} from "common/util/AppStatusHelper"
 const log = getLogger(__filename)
 
 
@@ -64,6 +65,7 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 				return false
 			}
 
+      pushStatusMessage(makeStatusMessage("Synchronizing Issues"))
 
 			const
 				syncedAt = Date.now(),
@@ -78,7 +80,12 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 							...repoParams,
 							since: formatTimestamp(timestamp)
 						},
-						issueOpts = (gh.issues.listForRepo as any).endpoint.merge(params),
+						issueOpts = (gh.issues.listForRepo as any).endpoint.merge({
+							...params,
+							state: "all",
+							sort: "updated",
+							direction: "desc"
+						}),
             commentOpts = (gh.issues.listCommentsForRepo as any).endpoint.merge({
 							...params,
 							sort: "updated",
@@ -173,6 +180,7 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 
 
 			log.info(`Loaded ${issues.length} issues`)
+      pushStatusMessage(makeStatusMessage("Synchronized"))
 
 			this.emit(ObjectEvent.Synced, syncedAt, issues)
 			return true

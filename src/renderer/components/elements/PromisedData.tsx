@@ -1,13 +1,13 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
-import {NestedStyles} from "renderer/styles/ThemedStyles"
+import {NestedStyles, StyleDeclaration} from "renderer/styles/ThemedStyles"
 
 import {useEffect, useRef, useState} from "react"
 
 const log = getLogger(__filename)
 
 
-function baseStyles(theme: Theme): NestedStyles {
+function baseStyles(theme: Theme): StyleDeclaration {
   const
     {palette} = theme,
     {primary, secondary} = palette

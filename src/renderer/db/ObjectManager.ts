@@ -7,6 +7,7 @@ import * as _ from 'lodash'
 import {EnumEventEmitter} from "type-enum-events"
 import Deferred from "common/Deferred"
 import {nextTick} from "typedux"
+import Scheduler, {ITimerRegistration} from "common/Scheduler"
 
 const log = getLogger(__filename)
 
@@ -29,21 +30,21 @@ export interface IObjectChange<T,PK> {
 
 // noinspection JSUnusedGlobalSymbols
 export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<ObjectEvent> {
-  
+
   private static initialized = false
-  
+
   private static managers = Array<ObjectManager<any,any>>()
-  
+
   private static active = false
-  
+
   private static updateManagerStatus(accessToken:string | null = getStoreState().AppState.config.accessToken) {
     this.active = !accessToken || _.isEmpty(accessToken)
-    
+
     this.managers.forEach(manager =>
       this.active ? manager.pause() : manager.resume()
     )
   }
-  
+
   static init() {
     if (this.initialized) return
     this.initialized = true
@@ -52,7 +53,7 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
       const
         {config:{accessToken}, user} = appState,
         ready = !!user && !!accessToken
-      
+
       if (
         (this.active && !ready) ||
         (!this.active && ready)
@@ -67,16 +68,25 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
   get className() {
     return getValue(() => this.constructor.name, 'UNKNOWN')
   }
-  
+
+  private scheduledTimerReg:ITimerRegistration | null = null
+
+
+  private syncDeferred:Deferred<boolean> | null = null
+  private syncsPending = Array<[PK[],Deferred<boolean>]>()
+
+
   /**
    * Constructor takes the dexie table it's wrapping
    *
    * @param table
+   * @param scheduledIntervalMillis
    */
-  protected constructor(public table:Dexie.Table<T, PK>) {
+  protected constructor(public table:Dexie.Table<T, PK>, public scheduledIntervalMillis:number = 60000) {
     super(ObjectEvent)
     ObjectManager.init()
-    
+
+
     // ;(db as any).on('changes', (changes:Array<IObjectChange<T,PK>>) => {
     //   const
     //     tableChanges = changes.filter(change => change.table === this.table.name),
@@ -90,49 +100,71 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
     //     this.emit(type,_.flatten(data))
     //   })
     // })
+
+    this.schedule()
   }
-  
+
+
+
+  private schedule() {
+    if (this.scheduledTimerReg) {
+      Scheduler.clear(this.scheduledTimerReg)
+      this.scheduledTimerReg = null
+    }
+
+    if (this.scheduledIntervalMillis === -1)
+      return
+
+    this.scheduledTimerReg = Scheduler.createInterval(
+      ():void => {
+        if (this.syncDeferred) return
+        this.sync()
+      },
+      this.scheduledIntervalMillis,
+      ():void => {this.scheduledTimerReg = null}
+    )
+  }
+
   /**
    * Start the object manager
    */
   async start() {
     log.info(`Starting: ${this.className}`)
-    
-    
+
   }
-  
+
   pause():void {
-  
+
   }
-  
+
   resume():void {
-  
+
   }
-  
-  
+
+
   abstract async clear()
-  
+
   /**
    * Get the primary key - must be implemented
    *
    * @param o
    */
   abstract getPrimaryKey(o:T):PK
-  
+
   /**
    * Called when an object is removed
    *
    * @param {PK} key
    */
   abstract onRemove(key:PK)
-  
+
   /**
    * Called when an object is changed
    *
    * @param {T} o
    */
   abstract onChange(o:T)
-  
+
   /**
    * Delete an object
    *
@@ -141,7 +173,7 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
   async delete(key:PK):Promise<void> {
     await this.table.delete(key)
   }
-  
+
   /**
    * Get a single local object
    *
@@ -150,7 +182,7 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
   async get(key:PK):Promise<T> {
     return await this.table.get(key)
   }
-  
+
   /**
    * Save/Update
    *
@@ -164,17 +196,14 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
       return o
     })
   }
-  
+
   /**
    * Get all from DB
    */
   async all():Promise<T[]> {
     return await this.table.toArray()
   }
-  
-  private syncDeferred:Deferred<boolean> | null = null
-  private syncsPending = Array<[PK[],Deferred<boolean>]>()
-  
+
   protected abstract doSync(...keys:PK[]):Promise<boolean>
   /**
    * Sync with remote objects
@@ -187,12 +216,12 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
         return deferred.promise
       } else {
         this.syncDeferred = new Deferred<boolean>(this.doSync(...keys))
-    
+
         return await this.syncDeferred.promise.then(async (result) => {
           const syncsPending = this.syncsPending
           this.syncsPending = []
           this.syncDeferred = null
-      
+
           if (syncsPending.length) {
             nextTick(() => {
               this.sync(...keys)
@@ -209,6 +238,6 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
       await navigator.storage.persist()
     }
   }
-  
-  
+
+
 }

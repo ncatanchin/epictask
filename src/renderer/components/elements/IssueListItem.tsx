@@ -50,7 +50,8 @@ import {
   PrimitiveDot as DotIcon
 } from "@githubprimer/octicons-react"
 import IssueStateLabel from "renderer/components/elements/IssueStateLabel"
-import {useCallback} from "react"
+import {useCallback, useEffect, useState} from "react"
+import {shortId} from "common/IdUtil"
 
 const
   Octicon = require("@githubprimer/octicons-react").default,
@@ -121,12 +122,12 @@ function baseStyles(theme): any {
           [directChild("top")]: [FlexRow, FillWidth, makeHeightConstraint(rem(2.5)), makePaddingRem(0.3, 0.5, 0), {
             background: colorGetter("topBg"),
             alignItems: 'center',
-            [directChild("title")]: [FlexScale, makePaddingRem(0, 0.5, 0, 0), Ellipsis, {
+            [directChild("title")]: [FlexScale, makePaddingRem(0, 0.5, 0, 1), Ellipsis, {
               fontSize: rem(1.2),
               fontWeight: 500
             }],
             [directChild("metadata")]: [FlexAuto, {
-              fontSize: rem(0.7),
+              fontSize: rem(0.9),
               color: colorGetter("metadata")
             }],
             [directChild("dot")]: [FlexAuto, makePaddingRem(0, 0.5), {
@@ -140,7 +141,8 @@ function baseStyles(theme): any {
             //   textAlign: "right"
             // }]
           }],
-          [directChild("bottomRow")]: [FlexAuto, FillWidth, OverflowAuto, FlexRowCenter, makePaddingRem(0.3, 0.4, 0.5, 0), {
+          [directChild("bottomRow")]: [FlexAuto, FillWidth, OverflowAuto, FlexRowCenter, makePaddingRem(0.3, 0.4, 0.5,0.7), {
+            // paddingLeft: theme.spacing.unit,
             [directChild("labelsContainer")]: [FlexScale, PositionRelative, makeMarginRem(0), {
               overflowY: "hidden",
               overflowX: "auto",
@@ -164,11 +166,14 @@ function baseStyles(theme): any {
     }]
     ,
 
+    collabRoot: [{
+      paddingRight: 0
+    }],
     milestoneRoot: [{
       maxWidth: "50%",
       flexShrink: 2,
       marginRight: rem(0),
-      marginLeft: rem(0)
+      marginLeft: theme.spacing.unit
     }],
 
     milestoneChip: [{
@@ -177,11 +182,10 @@ function baseStyles(theme): any {
     }],
 
     //makeHeightConstraint(rem(1.8))
-    labelsSpacer: [makeDimensionConstraints(rem(1))],
+    labelsSpacer: [makeDimensionConstraints(theme.spacing.unit)],
 
-    labelChip: [FlexAuto, makeMarginRem(0, 0.5, 0, 0), {
-      marginTop: 0,
-      marginBottom: 0
+    labelChip: [FlexAuto, makeMarginRem(0), {
+      marginRight: theme.spacing.unit
     }],
     //makeDimensionConstraints(rem(1.5))
     labelAdd: [makePaddingRem(0, 0, 0, 0.25), {
@@ -204,26 +208,26 @@ interface P extends IThemedProperties {
 export default StyledComponent<P>(baseStyles, {withTheme: true})(function IssueListItem(props: P): React.ReactElement<P> {
 
   const
-    {issue, classes, selected = false, info = false, style, theme, ...other} = props
+    {issue, classes, selected = false, info = false, style, theme, ...other} = props,
+    [prefix,setPrefix] = useState<string>(shortId),
+    onLabelsChanged = useCallback((labels: Array<ILabel>): void => {
+      uiTask("Updating Labels",async () => {
+        await patchIssueLabels(await getIssue(issue.id), labels)
+      })
+    },[issue]),
+    onMilestoneSelected = useCallback((milestone: IMilestone | null): void => {
+      uiTask("Updating Milestone",async () => {
+        await patchIssueMilestone(issue.id, milestone)
+      })
+    },[issue]),
+    onCollaboratorsSelected = useCallback((collabs: Array<ICollaborator> | null): void => {
+      uiTask("Updating Assignees",async () => {
+        await patchIssueAssignees(issue.id, collabs)
+      })
+    },[issue])
 
-  const onLabelsChanged = useCallback((labels: Array<ILabel>): void => {
-    uiTask(async () => {
-      await patchIssueLabels(await getIssue(issue.id), labels)
-    })
-  },[issue])
 
-  const onMilestoneSelected = useCallback((milestone: IMilestone | null): void => {
-    uiTask(async () => {
-      await patchIssueMilestone(issue.id, milestone)
-    })
-  },[issue])
-
-  const onCollaboratorsSelected = useCallback((collabs: Array<ICollaborator> | null): void => {
-    uiTask(async () => {
-      await patchIssueAssignees(issue.id, collabs)
-    })
-  },[issue])
-
+  useEffect(() => setPrefix(shortId()),[issue.id])
 
   return <div
     style={style}
@@ -252,12 +256,13 @@ export default StyledComponent<P>(baseStyles, {withTheme: true})(function IssueL
         <FlexSpacer/>
         <div className="bottomRow">
           <Collaborators
-            id={`issue-list-item-${issue.id}-collabs`}
+            id={`issue-list-item-${prefix}-${issue.id}-collabs`}
             issue={issue}
             onSelected={onCollaboratorsSelected}
+            compact
           />
           <Milestone
-            id={`issue-list-item-${issue.id}-milestone`}
+            id={`issue-list-item-${prefix}-${issue.id}-milestone`}
             milestone={issue.milestone}
             onSelected={onMilestoneSelected}
             classes={{
@@ -273,7 +278,7 @@ export default StyledComponent<P>(baseStyles, {withTheme: true})(function IssueL
             {containerRef =>
               <div ref={containerRef} className="labelsContainer">
                 <Labels
-                  id={`issue-list-item-${issue.id}-labels`}
+                  id={`issue-${prefix}-list-item-${issue.id}-labels`}
                   labels={issue.labels}
                   className="labels"
                   classes={{

@@ -1,8 +1,10 @@
 ///<reference path="../../typings/custom.d.ts"/>
-//import 'source-map-support/register'
+import 'source-map-support/register'
+//import "react-hot-loader/patch"
+//import "@babel/polyfill"
 import "common/util/Ext"
 import "./ReactHotConfig"
-import Sugar from "sugar"
+//import Sugar from "sugar"
 
 import "./assets/fonts/fonts.global.scss"
 import "./assets/css/global.scss"
@@ -13,13 +15,14 @@ import * as ReactDOM from "react-dom"
 import {loadAndInitStore} from "common/store/AppStore"
 import * as jQuery from 'jquery'
 import * as LoDash from 'lodash'
+import "renderer/store/UIAppStoreTypes"
 
 declare global {
   const $:typeof jQuery
   const _:typeof LoDash
 }
 
-Sugar.extend()
+require("sugar").extend()
 
 EventEmitter.defaultMaxListeners = Number.MAX_VALUE
 
@@ -66,8 +69,18 @@ async function renderRoot():Promise<void> {
   await require("./init").default
   await require("common/watchers").default
 
+  require("renderer/watchers/DialogWatcher")
+
   doRender()
 }
 
 // noinspection JSIgnoredPromiseFromCall
 renderRoot()
+
+
+if (module.hot) {
+  module.hot.accept(["renderer/styles/Themes"],updates => {
+    console.info("Re-render root",updates)
+    renderRoot().catch(err => console.error("Failed to render root",err))
+  })
+}

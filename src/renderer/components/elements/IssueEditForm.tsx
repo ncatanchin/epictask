@@ -14,7 +14,7 @@ import {
   Ellipsis,
   makePaddingRem,
   PositionRelative,
-  FillWidth, FlexColumn, makeWidthConstraint, FlexRow, OverflowHidden, Fill, makeHeightConstraint
+  FillWidth, FlexColumn, makeWidthConstraint, FlexRow, OverflowHidden, Fill, makeHeightConstraint, PositionAbsolute
 } from "renderer/styles/ThemedStyles"
 import {createStructuredSelector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
@@ -23,13 +23,13 @@ import {IIssue, IIssueEventData} from "common/models/Issue"
 import {ICollaborator, IRepo} from "common/models/Repo"
 import {dataSelector, selectedRepoSelector} from "common/store/selectors/DataSelectors"
 import MarkdownEditor from "renderer/components/markdown/MarkdownEditor"
-import {useEffect, useState} from "react"
+import {useContext, useEffect, useMemo, useState} from "react"
 import {getValue, guard} from "typeguard"
 import {IssuesUpdateParams} from "@octokit/rest"
 import {useCallback} from "react"
 import * as _ from 'lodash'
 import {ILabel} from "common/models/Label"
-import TextField from "@material-ui/core/TextField/TextField"
+import TextField from "./TextField"
 import Collaborators from "renderer/components/elements/Collaborators"
 import Milestone from "renderer/components/elements/Milestone"
 import {IMilestone} from "common/models/Milestone"
@@ -43,11 +43,16 @@ import {useCommandManager} from "renderer/command-manager-ui"
 import {makeCommandManagerAutoFocus} from "common/command-manager"
 import {useRef} from "react"
 import CommandContainerIds from "renderer/CommandContainers"
+import MUITextField from "@material-ui/core/TextField/TextField"
+import IssueEditController, {IssueEditContext} from "renderer/controllers/IssueEditController"
+import {useController, withController} from "renderer/controllers/Controller"
+import {uiTask} from "renderer/util/UIHelper"
 
 const log = getLogger(__filename)
 
+type Classes = "root" | "title" | "labels"
 
-function baseStyles(theme: Theme): NestedStyles {
+function baseStyles(theme: Theme): StyleDeclaration<Classes> {
   const
     {palette} = theme,
     {primary, secondary} = palette
@@ -73,9 +78,8 @@ function baseStyles(theme: Theme): NestedStyles {
           //maxHeight: "30vh",
           overflowY: 'auto',
           overflowX: 'hidden',
-          "& .body, & .CodeMirror": [FlexScale, FillWidth, Fill, {
-            // minHeight: rem(5),
-            // height: "auto",
+          "& .body, & .CodeMirror": [FlexScale, FillWidth, Fill, PositionRelative, {
+            //fontSize: rem(2)
           }],
         }],
 
@@ -85,13 +89,12 @@ function baseStyles(theme: Theme): NestedStyles {
       }]
     }],
     title: [FlexScale,FlexRow,FillWidth],
-    titleInput: [FlexScale],
     labels: [FlexScale, PositionRelative, makePaddingRem(0, 1, 0, 0)],
 
   }
 }
 
-interface P extends IThemedProperties {
+interface P extends IThemedProperties<Classes> {
   onClose?: (() => void) | null
   issue?: IIssue | null
 }
@@ -115,106 +118,84 @@ const selectors = {
 export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(props: P & SP): React.ReactElement<P & SP> {
   const
     {id = CommandContainerIds.IssueEditForm, classes, onClose, issue, repo, labels, milestones, collaborators, data,...other} = props,
-    makeDefaultBody = (): string => getValue(() => issue && issue.body, ""),
-    makeDefaultPatch = (): Partial<IssuesUpdateParams> => ({
-      body: makeDefaultBody(),
-      title: getValue(() => issue && issue.title, ""),
-      assignees: getValue(() => issue.assignees.map(assignee => assignee.login), []),
-      assignee: getValue(() => issue.assignee.login, null),
-      milestone: getValue(() => issue.milestone.number, null),
-      labels: getValue(() => issue.labels.map(label => label.name), [])
-    }),
-    [defaultBody, setDefaultBody] = useState<string>(makeDefaultBody),
-    [issuePatch, setIssuePatch] = useState<Partial<IssuesUpdateParams>>(() => makeDefaultPatch()),
-    checkDirty = (): boolean => !_.isEqual(makeDefaultPatch(), issuePatch),
-    [dirty, setDirty] = useState<boolean>(false),
-    makeSelectedLabels = (): Array<ILabel> => getValue(() => issuePatch.labels.map(name => labels.data.find(label => label.name === name)).filter(label => !!label), []),
+    [controller,updateController] = useController<IssueEditController>(),
+    setIssuePatch = useCallback(
+      (patchFn:((patch:Partial<IssuesUpdateParams>) => Partial<IssuesUpdateParams>)) => {
+        updateController(oldController => {
+          const newController = oldController.setPatch(patchFn)
+          log.info("Patching issue on controller", controller, oldController, newController)
+          return newController
+        })
+      }
+      ,[controller,updateController]),
+    defaultBody = useMemo<string>(() => controller && controller.defaultBody,[controller]),
+    issuePatch = controller.patch,
+    isDirty = useMemo<boolean>(() => controller && !_.isEqual(controller.defaultPatch, issuePatch),[controller]),
+    makeSelectedLabels = useCallback(
+      (): Array<ILabel> =>
+        getValue(() =>
+          issuePatch.labels
+            .map(name => labels.data.find(label => label.name === name))
+            .filter(label => !!label), [])
+    ,[controller]),
     [selectedLabels, setSelectedLabels] = useState<Array<ILabel>>(makeSelectedLabels()),
     isEdit = !!issue && (issue.id > 0),
-    formRef = useRef<HTMLFormElement | null>(null),
-    {props:commandManagerProps} = useCommandManager(id,builder => builder.make(),formRef,{autoFocus: makeCommandManagerAutoFocus(100)})
+    formRef = useRef<HTMLFormElement | null>(null)
+    // ,
+    // {props:commandManagerProps} = useCommandManager(id,builder => builder.make(),formRef,{autoFocus: makeCommandManagerAutoFocus(100)})
 
   const
     onBodyChanged = useCallback((body: string): void => {
       setIssuePatch(issuePatch => ({...issuePatch, body}))
-    }, [issue]),
+    }, [setIssuePatch]),
     onTitleChanged = useCallback(event => {
       const title = getValue(() => event.target.value)
-      if (!title) return
 
-      setIssuePatch(issuePatch => ({...issuePatch, title}))
-    }, [issue]),
+
+      setIssuePatch(issuePatch => ({...issuePatch, title: title || ""}))
+    }, [setIssuePatch]),
     onCollaboratorsSelected = useCallback((collaborators: Array<ICollaborator>) => {
       setIssuePatch(issuePatch => ({
         ...issuePatch,
         assignee: getValue(() => collaborators[0].login, null),
         assignees: getValue(() => collaborators.map(collab => collab.login), [])
       }))
-    }, [issue]),
+    }, [setIssuePatch]),
     onLabelsSelected = useCallback((labels: Array<ILabel>) => {
       setIssuePatch(issuePatch => ({
         ...issuePatch,
         labels: getValue(() => labels.map(label => label.name), [])
       }))
-    }, [issue]),
+    }, [setIssuePatch]),
     onMilestoneSelected = useCallback((milestone: IMilestone | null) => {
       setIssuePatch(issuePatch => ({
         ...issuePatch,
         milestone: getValue(() => milestone.number, null)
       }))
-    }, [issue]),
+    }, [setIssuePatch]),
     onCancel = useCallback((): void => {
       guard(() => onClose())
     }, []),
-    onSave = useCallback(async (): Promise<void> => {
-      const
-        defaultPatch = makeDefaultPatch(),
-        patch = {...issuePatch}
-
-      Object.keys(defaultPatch).forEach(key => {
-        if (_.isEqual(defaultPatch[key],patch[key])) {
-          delete patch[key]
-        }
+    onSave = useCallback((): Promise<void> =>
+      uiTask("Saving Issue", async () => {
+        await controller.onSave(repo)
+        guard(() => onClose())
       })
+    , [repo,defaultBody, issuePatch, controller])
 
-      log.info("Saving",repo,issue,issuePatch,defaultPatch,patch)
-      if (isEdit) {
-        await patchIssue(issue, patch)
-      } else {
-        await createIssue(repo,patch as any)
-      }
-      guard(() => onClose())
-    }, [repo,defaultBody, issuePatch])
 
-  useEffect(() => {
-    const newDefaultBody = makeDefaultBody()
-    if (newDefaultBody !== defaultBody)
-      setDefaultBody(newDefaultBody)
-  }, [issue])
-
-  useEffect(() => {
-    setDirty(checkDirty())
-    setSelectedLabels(makeSelectedLabels())
-  }, [issuePatch])
-
-  return <form id={id} ref={formRef} className={classes.root} onSubmit={onSave} {...other} {...commandManagerProps}>
+  return controller && issuePatch && <form id={id} ref={formRef} className={classes.root} onSubmit={onSave} {...other}>
     <div className="row padding">
       <TextField
         autoFocus
-        classes={{
-          root: classes.title
-        }}
-
-        InputProps={{
-          disableUnderline: true,
-          classes: {
-            root: classes.titleInput
-          }
-        }}
-        variant="filled"
-        value={issuePatch.title}
+        value={issuePatch && issuePatch.title}
         onChange={onTitleChanged}
-        placeholder="Title"
+        placeholder="Issue title"
+        classes={{
+          root: classes.title,
+          // inputRoot: classes.titleInputRoot,
+          // input: classes.titleInput
+        }}
       />
     </div>
 
@@ -247,18 +228,18 @@ export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(
         onChanged={onBodyChanged}
       />
     </div>
-    <div className="row controls">
-      <div className="note">{dirty ? "Unsaved changes" : "No changes"}</div>
-      <div className="buttons">
-        <Button variant="text" size="small" className="button" onClick={onCancel}>
-          <CancelIcon className={mergeClasses("iconLeft", "iconSmall")}/>
-          Cancel
-        </Button>
-        <Button variant="contained" size="small" className="button" disabled={!dirty} onClick={onSave}>
-          <SaveIcon className={mergeClasses("iconLeft", "iconSmall")}/>
-          Save
-        </Button>
-      </div>
-    </div>
+    {/*<div className="row controls">*/}
+      {/*<div className="note">{dirty ? "Unsaved changes" : "No changes"}</div>*/}
+      {/*<div className="buttons">*/}
+        {/*<Button variant="text" size="small" className="button" onClick={onCancel}>*/}
+          {/*<CancelIcon className={mergeClasses("iconLeft", "iconSmall")}/>*/}
+          {/*Cancel*/}
+        {/*</Button>*/}
+        {/*<Button variant="contained" size="small" className="button" disabled={!dirty} onClick={onSave}>*/}
+          {/*<SaveIcon className={mergeClasses("iconLeft", "iconSmall")}/>*/}
+          {/*Save*/}
+        {/*</Button>*/}
+      {/*</div>*/}
+    {/*</div>*/}
   </form>
 })

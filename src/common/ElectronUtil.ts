@@ -75,7 +75,7 @@ export function isBoundsWithinBounds(bounds:Electron.Rectangle,test:Electron.Rec
 			{x:bounds.x + bounds.width,y:bounds.y + bounds.height},
 			{x:bounds.x,y:bounds.y + bounds.height}
 		]
-	
+
 	return points.every(p => isPointInBounds(p,test))
 }
 
@@ -84,12 +84,12 @@ export function isBoundsWithinBounds(bounds:Electron.Rectangle,test:Electron.Rec
 export function getDisplayForPoint(p:Point):Electron.Display {
 	let
 		electron = require('electron')
-	
+
 	electron = electron.remote as any || electron
-	
+
 	const
 		displays = electron.screen.getAllDisplays()
-	
+
 	return displays.find(it => isPointInBounds(p,it.bounds))
 }
 
@@ -133,10 +133,7 @@ let windowId = null
 export function getWindowId():number {
 	if (windowId)
 		return windowId
-	
-	// let
-	// 	Electron = require('electron')
-	
+
 	return (windowId = !Electron.remote ? -1 : Electron.remote.getCurrentWindow().id)
 }
 

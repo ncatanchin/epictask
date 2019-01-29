@@ -18,10 +18,10 @@ async function installDevTools():Promise<void> {
 
 	const {
 		default: installExtension,
-		REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS,REACT_PERF
+		REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS
 	} = require('electron-devtools-installer')
 
-	await Promise.all([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS,REACT_PERF].map((key:string) => {
+	await Promise.all([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS].map((key:string) => {
 		installExtension(key).then((name) => {
 			log.info(`Added Extension:  ${name}`)
 		}).catch((err) => console.log('An error occurred: ', err))
@@ -47,7 +47,7 @@ export async function createMainWindow():Promise<BrowserWindow> {
 	})
 
 	mainWindow = new BrowserWindow({
-		webPreferences: {webSecurity: false},
+		webPreferences: {webSecurity: true},
 		minHeight: WindowMinHeight,
 		minWidth: WindowMinWidth,
 		frame: false,

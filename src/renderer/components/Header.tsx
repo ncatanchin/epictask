@@ -43,13 +43,13 @@ function baseStyles(theme:Theme):StyleDeclaration {
 		root: [makeHeightConstraint(rem(2)),FillWidth,FlexRowCenter,PositionRelative,OverflowHidden,{
 			background: Header.colors.bg,
 			boxShadow: Header.colors.boxShadow,
-			"& > .left, & > .right": [FlexRowCenter, FlexScale, FillHeight, {
+			"& > .left, & > .right": [FlexRowCenter, FillHeight, {
 
 			}],
 			"& > .left": [{
 				justifyContent: "flex-start"
 			}],
-			"& > .right": [{
+			"& > .right": [FlexScale,{
 				justifyContent: "flex-end"
 			}],
 
@@ -57,29 +57,32 @@ function baseStyles(theme:Theme):StyleDeclaration {
 				boxShadow: "inset 0 0 0.6rem rgba(100,100,100,0.8)"
 			},
 
-			"& > .logo": [FlexAuto,FillHeight,PositionRelative,makeDimensionConstraints(rem(1.2)),{
-				color: primary.contrastText,
-				fontFamily: "FiraCode",
+			"& > .logo": [FlexAuto,PositionRelative,{
+				color: primary.main,
+				fontFamily: "Jura",
+				fontWeight: 400,
+				fontSize: rem(1.2),
+				paddingLeft: rem(1),
 				"-webkit-user-select": "none",
 				"-webkit-app-region": "drag",
 				"&, & *, &:hover, &:hover *": {
 					cursor: "move !important",
 				},
-				"& > .icon": [makeDimensionConstraints(rem(1.2)),{
-					pointerEvents: "none",
-					borderRadius: rem(0.6),
-					backgroundColor: Header.colors.logoBg
-				}],
-				"& > .overlay": [PositionAbsolute,makeTransition("box-shadow"),makeDimensionConstraints(rem(1.4)),{
-					pointerEvents: "all",
-					top: 0,
-					left: 0,
-					right:0,
-					bottom:0,
-					zIndex: 100,
-					borderRadius: rem(0.6),
-					boxShadow: Header.colors.logoBoxShadow
-				}]
+				// "& > .icon": [makeDimensionConstraints(rem(1.2)),{
+				// 	pointerEvents: "none",
+				// 	borderRadius: rem(0.6),
+				// 	backgroundColor: Header.colors.logoBg
+				// }],
+				// "& > .overlay": [PositionAbsolute,makeTransition("box-shadow"),makeDimensionConstraints(rem(1.4)),{
+				// 	pointerEvents: "all",
+				// 	top: 0,
+				// 	left: 0,
+				// 	right:0,
+				// 	bottom:0,
+				// 	zIndex: 100,
+				// 	borderRadius: rem(0.6),
+				// 	boxShadow: Header.colors.logoBoxShadow
+				// }]
 			}]
 		}],
 
@@ -104,8 +107,9 @@ export default StyledComponent<P>(baseStyles)(function Header(props:P):React.Rea
     </div>
 
     <div className="logo">
-      <CheckIcon className="icon"/>
-      <div className="overlay"/>
+			epictask
+      {/*<CheckIcon className="icon"/>*/}
+      {/*<div className="overlay"/>*/}
     </div>
 
     <div className="right">

@@ -29,7 +29,8 @@ interface P extends IThemedProperties {
 export default function EpicCodeBlock(props: P): React.ReactElement<P> {
   const
     codeRef = useRef<HTMLElement | null>(null),
-    {language, literal,value} = props
+    {language, literal,value} = props,
+    source = literal || value
 
 
   //log.info("MD", this, props)
@@ -37,7 +38,7 @@ export default function EpicCodeBlock(props: P): React.ReactElement<P> {
     if (!codeRef.current) return
     highlightCode(codeRef.current)
   },[codeRef])
-  return <pre>
+  return _.isEmpty(source && source.trim()) ? <span/> : <pre>
     <code ref={codeRef} className={language}>{literal || value}</code>
   </pre>
 }

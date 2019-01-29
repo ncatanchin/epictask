@@ -9,18 +9,20 @@ import {
 import {createStructuredSelector, ParametricSelector, Selector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
 import {guard, isFunction} from "typeguard"
+import {StyleRules} from "@material-ui/core/styles"
 
 
 const log = getLogger(__filename)
 
+type Classes = "root"
 
-function baseStyles(theme): StyleDeclaration {
+function baseStyles(theme): StyleRules<Classes> {
   const
     {palette} = theme,
     {primary, secondary} = palette
 
   return {
-    root: []
+    root: {}
   }
 }
 

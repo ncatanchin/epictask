@@ -1,3 +1,6 @@
 import * as React from 'react'
+import IssueViewController from "renderer/controllers/IssueViewController"
 
-export const FocusedTimelineIdContext = React.createContext<number>(0)
+export const IssueViewControllerContext = React.createContext<IssueViewController | null>(null)
+
+

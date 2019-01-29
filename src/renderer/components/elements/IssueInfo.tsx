@@ -5,7 +5,6 @@ import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {IIssue} from "common/models/Issue"
 import baseStyles from "renderer/components/elements/IssueDetails.styles"
 import IssueListItem from "renderer/components/elements/IssueListItem"
-import {IssueComment} from "renderer/components/elements/IssueEvents"
 
 const log = getLogger(__filename)
 

@@ -25,10 +25,10 @@ $font-weight-map: (
 
 		@font-face {
 			font-family: $font-name;
-			src: url('#{$font-name}/#{$font-name}-#{$weight}.eot');
-			src: url('#{$font-name}/#{$font-name}-#{$weight}.eot?iefix') format('eot'),
-			url('#{$font-name}/#{$font-name}-#{$weight}.woff') format('woff'),
-			url('#{$font-name}/#{$font-name}-#{$weight}.ttf') format('truetype');
+		//	src: url('#{$font-name}/#{$font-name}-#{$weight}.eot');
+		//url('#{$font-name}/#{$font-name}-#{$weight}.eot?iefix') format('eot'),
+			src: url('#{$font-name}/#{$font-name}-#{$weight}.woff') format('woff'),
+				url('#{$font-name}/#{$font-name}-#{$weight}.ttf') format('truetype');
 			//,
 			//			url('#{$font-name}/#{$font-name}-#{$weight}.svg##{$font-name}') format('svg')
 			font-style: normal;
@@ -39,7 +39,8 @@ $font-weight-map: (
 
 @include makeFontFace('AvenirNext','Heavy','Bold','DemiBold','UltraLight','Medium','Regular')
 @include makeFontFace('FiraCode','Bold','Light','Medium','Regular')
+@include makeFontFace('Jura','Bold','Light','Medium','Regular','Semibold')
 
 *, input, textarea, select {
-  font-family: 'AvenirNext';
+	font-family: 'AvenirNext', sans-serif;
 }

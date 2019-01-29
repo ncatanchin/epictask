@@ -1,30 +1,31 @@
 import * as React from "react"
+import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 import getLogger from "common/log/Logger"
 import {
+  Fill,
   IThemedProperties,
-  makePaddingRem,
-  mergeClasses, mergeStyles, NestedStyles, rem,
-  StyleDeclaration,
-  withStatefulStyles
+  mergeClasses,
+  mergeStyles,
+  NestedStyles,
+  PositionAbsolute,
+  PositionRelative,
+  rem,
+  StyleDeclaration
 } from "renderer/styles/ThemedStyles"
-import {createStructuredSelector} from "reselect"
-import {connect} from "common/util/ReduxConnect"
-import {elevationStyles} from "renderer/components/elements/Elevation"
 import {getValue, guard, isDefined, isFunction, isNumber, isString} from "typeguard"
-import {darken} from "@material-ui/core/styles/colorManipulator"
 import Popper from "@material-ui/core/Popper/Popper"
 import Grow from "@material-ui/core/Grow/Grow"
 import MenuItem from "@material-ui/core/MenuItem/MenuItem"
 import ClickAwayListener from "@material-ui/core/ClickAwayListener/ClickAwayListener"
-import {useEffect, useRef, useState} from "react"
 
-import Highlighter from "react-highlight-words"
-import {selectedOrgReposSelector} from "common/store/selectors/DataSelectors"
+
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {useCommandManager} from "renderer/command-manager-ui"
 
 
 const log = getLogger(__filename)
+
+const Highlighter = require("react-highlight-words")
 
 
 function baseStyles(theme: Theme): StyleDeclaration {
@@ -41,7 +42,17 @@ function baseStyles(theme: Theme): StyleDeclaration {
 
   return {
     root: [],
-    paper: [Select.paper],
+    paper: [Select.paper, PositionRelative,{
+      "&::after": [theme.focus, PositionAbsolute, Fill, {
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10,
+        content: "' '",
+        pointerEvents: "none"
+      }]
+    }],
     option: [Select.option.root, {
       "&.focused": [Select.option.focused,theme.outline,{
 
@@ -138,9 +149,9 @@ export default StyledComponent<P>(baseStyles)(function PopoverSelect<T>(props: P
   }
 
   const
-    [focusedValue,setFocusedValue] = useState<string | number | null>(getValue(() => getProperty(options[0], valueGetter,"id",null))),
+    [focusedValue,setFocusedValue] = useState<string | number | null>(() => getValue(() => getProperty(options[0], valueGetter,"id",null))),
     rootRef = useRef<any>(null),
-    makeMoveSelection = (increment:number):(() => void) => {
+    makeMoveSelection = useCallback((increment:number):(() => void) => {
       return () => {
         setFocusedValue(focusedValue => {
         let index = options.findIndex(opt => getProperty(opt, valueGetter, "id") === focusedValue)
@@ -161,16 +172,16 @@ export default StyledComponent<P>(baseStyles)(function PopoverSelect<T>(props: P
         })
       }
 
-    },
-    makeFocusedSelect = ():(() => void) => ():void => {
+    },[setFocusedValue,valueGetter,options]),
+    makeFocusedSelect = useCallback(():(() => void) => ():void => {
       setFocusedValue(focusedValue => {
         guard(() => onSelected(options.find(opt => getProperty(opt, valueGetter, "id") === focusedValue)))
         return focusedValue
       })
-    },
+    },[options,onSelected,valueGetter,setFocusedValue]),
     {props:commandManagerProps} = useCommandManager(
       id,
-      builder =>
+      useCallback(builder =>
         builder
           .command("Escape", onClose,{
             overrideInput: true
@@ -184,7 +195,7 @@ export default StyledComponent<P>(baseStyles)(function PopoverSelect<T>(props: P
           .command("ArrowUp", makeMoveSelection(-1), {
             overrideInput: true
           })
-          .make(),
+          .make(),[makeFocusedSelect,onClose,makeMoveSelection]),
        rootRef
     ),
     [query, setQuery] = useState(""),
@@ -208,7 +219,7 @@ export default StyledComponent<P>(baseStyles)(function PopoverSelect<T>(props: P
 
 
 
-  function onQueryChange(event: React.ChangeEvent<HTMLInputElement>): void {
+  const onQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>): void => {
     const query = event.target.value
     setQuery(query)
     setFilteredOptions(options.filter(opt => {
@@ -216,31 +227,33 @@ export default StyledComponent<P>(baseStyles)(function PopoverSelect<T>(props: P
       return new RegExp(query,"i").test(label)
     }))
 
-  }
+  },[options,labelGetter])
 
   const
-    selectedOptions = !selectedOption ? [] : (Array.isArray(selectedOption) ?selectedOption : [selectedOption]) as Array<T>,
-    selectedValues = getProperty(
+    selectedOptions = useMemo(() =>
+        !selectedOption ? [] : (Array.isArray(selectedOption) ?selectedOption : [selectedOption]) as Array<T>
+    ,[selectedOption]),
+    selectedValues = useMemo(() => getProperty(
       selectedOptions,
       valueGetter,
       "value"
-    ),
+    ),[selectedOptions,valueGetter]),
     selectionValid = !selectedValues.isEmpty() || selectedValues.every(opt => !opt || (!isNumber(opt) && !isString(opt)))
 
-  if (open) {
-    log.info(id, "Selected options", selectedOptions, "Selected values", selectedValues, "Valid", selectionValid, anchorEl)
-  }
-  return <Popper id={id} open={open} anchorEl={anchorEl} transition>
+  // if (open) {
+  //   log.info(id, "Selected options", selectedOptions, "Selected values", selectedValues, "Valid", selectionValid, anchorEl)
+  // }
+  return !open || !anchorEl ? null : <Popper id={id} open={open} anchorEl={anchorEl} transition>
     {({TransitionProps}) => (
       <Grow {...TransitionProps} timeout={250}>
         <ClickAwayListener onClickAway={onClose}>
           <div
             ref={rootRef}
-            style={elevationStyles.elevation4}
             className={classes.paper}
             {...other}
             {...commandManagerProps}
           >
+            {/*style={elevationStyles.elevation4}*/}
 
             {/* FILTER INPUT */}
             {filterable && <input

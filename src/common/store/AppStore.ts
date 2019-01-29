@@ -43,27 +43,42 @@ function hmrReducerSetup():void {
 	if (module.hot && !hmrReady) {
 		hmrReady = true
 		// When ./Reducers is updated, fire off updateReducers
-		module.hot.accept(["./state/AppState","./state/DataState"], updateReducers)
+		const stateModules = ["./state/AppState","./state/DataState"]
+		if (isRenderer()) {
+			stateModules.push("renderer/store/state/UIState")
+		}
+		module.hot.accept(stateModules, updateReducers)
 	}
 }
 
 /**
  * Update the store with the new/updated reducers
  */
-export function updateReducers():void {
+export async function updateReducers():Promise<void> {
 	log.debug("Updating reducers")
 	// The reducers have changed and a HMR was detected.  Let"s reload the reducers and pickup the updated ones
-	getStore().replaceReducers(...loadReducers())
+	getStore().replaceReducers(...(await loadReducers()))
 }
 
-export function loadReducers():Array<ILeafReducer<any,any>> {
+export async function loadReducers():Promise<Array<ILeafReducer<any,any>>> {
 	const reducers = [
 		...ObservableStore.makeSimpleReducers(new AppState(), new DataState())
 	]
+
 	if (isRenderer()) {
 		reducers.unshift(require('react-router-redux').routerReducer)
+
+		const
+			rendererStates = await Promise.all([
+        import("renderer/store/state/UIState")
+      ]),
+			rendererReducers = ObservableStore.makeSimpleReducers(
+				...rendererStates.map(mod => new (mod.default)())
+			)
+
+		reducers.push(...rendererReducers)
 	}
-	
+
 	return reducers
 }
 
@@ -100,37 +115,34 @@ async function initStore(devToolsMode:boolean = false):Promise<ObservableStore<I
 				await import("./enhancers/RendererEnhancer")
 		).default
 	]
-	
+
 	// Add redux as a dev tool in develop window
 	addDevMiddleware(enhancers)
-	
-	const reducers = loadReducers()
+
+	const reducers = await loadReducers()
 	const newObservableStore:ObservableStore<any> = ObservableStore.createObservableStore(
 		reducers,
 		compose.call(null, ...enhancers) as StoreEnhancer<any>,
 		null,
 		null,
 	)
-	
+
 	hmrReducerSetup()
-	
+
 	newObservableStore.rootReducer.onError = onError
-	
+
 	// Set the global store defined above
 	store = newObservableStore
-	
+
 	//(Typedux) so that components are able to access state from connectors
 	setStoreProvider(newObservableStore)
-	
-	const
-		ctx = require.context('./actions',true,/\.ts$/)
-	
-	// Load All Mods
-	ctx.keys().forEach(ctx)
-	
-	
-	log.info("Reading persisted data back into storeState")
-	//Object.assign(newObservableStore.getState(), loadState(newObservableStore.getState()))
+
+	// const
+	// 	ctx = require.context('./actions',true,/\.ts$/)
+	//
+	// // Load All Mods
+	// ctx.keys().forEach(ctx)
+
 	return store
 }
 

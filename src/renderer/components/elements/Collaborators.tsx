@@ -7,13 +7,12 @@ import {
   IThemedProperties,
   makeDimensionConstraints,
   makeHeightConstraint,
-  makePaddingRem,
   makeWidthConstraint,
   mergeClasses,
   NestedStyles, OverflowHidden,
   PositionAbsolute,
   PositionRelative,
-  rem
+  rem, StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {ICollaborator} from "common/models/Repo"
@@ -34,6 +33,7 @@ const
 function fillProps(props: P): P {
   return Object.assign({
     variant: "small",
+    compact: false,
     maxVisibleCollaborators: 3,
     editable: true,
     collaboratorOptions: []
@@ -66,19 +66,20 @@ function makeCollabDimGetter<T = string>(theme: Theme): ((props: P) => T) {
   return propsFn(({variant}: P): T => rem(theme.components.Chip.dimen[variant]) as any)
 }
 
-function baseStyles(theme: Theme): NestedStyles {
+function baseStyles(theme: Theme): StyleDeclaration {
   const
     {palette, components: {Chip, Avatar}} = theme,
     {primary, secondary} = palette,
     collabDimGetter = makeCollabDimGetter(theme),
-    picDimGetter = propsFn(({variant}: P): string => rem(Chip.dimen[variant] - 0.2)),
-    horizontalPadding = theme.spacing.unit,
+    picDimGetter = propsFn(({variant}: P): string => rem(Chip.dimen[variant])),
+    horizontalPaddingGetter = (props:P):number => props.compact ? 0 : theme.spacing.unit,
     calcWidth = (props: P): number | string => {
       const
         collabs = makeCollabs(props),
-        dim = collabDimGetter(props)
+        dim = collabDimGetter(props),
+        padding = horizontalPaddingGetter(props)
 
-      return `calc((${horizontalPadding}px * 2) + ${dim} + ((${dim} / 2) * ${Math.max(1,collabs.length - 1)}))`
+      return `calc((${padding}px * 2) + ${dim} + ((${dim} / 2) * ${Math.max(0,collabs.length - 1)}))`
     }
 
   return {
@@ -86,8 +87,8 @@ function baseStyles(theme: Theme): NestedStyles {
       PositionRelative,
       makeWidthConstraint(calcWidth),
       makeHeightConstraint(propsFn(collabDimGetter)), {
-        paddingRight: `${horizontalPadding}px`,
-        paddingLeft: `${horizontalPadding}px`,
+        paddingRight: horizontalPaddingGetter,
+        paddingLeft: horizontalPaddingGetter,
       }],
     avatars: [Fill, PositionRelative],
     pictureWrapper: [PositionAbsolute, FlexRowCenter, FillHeight, makeDimensionConstraints(collabDimGetter), {
@@ -115,6 +116,7 @@ interface P extends IThemedProperties {
   issue: IIssue
   maxVisibleCollaborators?: number | null
   variant?: "normal" | "small"
+  compact?: boolean
   editable?: boolean
   collaboratorOptions?: Array<ICollaborator>
   onSelected?: (assignees: Array<ICollaborator>) => void
@@ -137,6 +139,7 @@ export default StyledComponent<P>(baseStyles, selectors, {withTheme: true})(func
       onSelected,
       variant,
       editable,
+      compact,
       collaboratorOptions,
       issue,
       theme,

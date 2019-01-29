@@ -1,6 +1,7 @@
 import {Color, makeMaterialPalette} from "renderer/styles/MaterialColors"
 import createMuiTheme from "@material-ui/core/styles/createMuiTheme"
 import {
+  alpha,
   Ellipsis, Fill,
   IThemePalette, makeDimensionConstraints, makePaddingRem,
   makeTransition,
@@ -13,6 +14,8 @@ import {darken, lighten} from "@material-ui/core/styles/colorManipulator"
 import getLogger from "common/log/Logger"
 import {Theme as MUITheme} from "@material-ui/core"
 import {Run} from "common/util/fn"
+import * as tiny from "tinycolor2"
+import {elevationStyles} from "renderer/components/elements/Elevation"
 
 const log = getLogger(__filename)
 
@@ -30,41 +33,18 @@ const darkPalette = {
   success: makeMaterialPalette("#3cff32", "A200", "A400", "A700"),
   action: makeMaterialPalette("#5054ff", "A200", "A400", "A700"),
   open: makeMaterialPalette("#22993E", "A200", "A400", "A700"),
-  closed: makeMaterialPalette("#DD747F", "A200", "A400", "A700"),
+  closed: makeMaterialPalette("#dd2b2c", "A200", "A400", "A700"),
   pr: makeMaterialPalette("#C297FF", "A200", "A400", "A700")
 } as IThemePalette
 
 
-declare global {
-  interface ITypographyStyles {
-    highlight: NestedStyles
-  }
-
-  interface IComponentStyles {
-
-    Typography: ITypographyStyles
-    SplitPane: ISplitPaneStyles
-    Header: IHeaderStyles
-    IssuesLayout: IIssuesLayoutStyles
-    Labels: ILabelsStyles
-    IssueListItem: IIssueListItemStyles
-    IIssueDetails: IIssueDetailsStyles
-
-  }
-
-  interface ITheme {
-    palette: IThemePalette
-    components: IComponentStyles
-  }
-
-  type Theme = ITheme & MUITheme & any
-}
-
-
-function makeDarkTheme(): ITheme & any {
+// eslint-disable-next-line
+function makeDarkThemeExt() {
   const
     {action, primary, secondary, open, closed, pr} = darkPalette,
-    outlineFocused = `inset 0px 0px 0.1rem 0.1rem ${action.main}`,
+    focusColor = action.main,
+    focusColorText = action.contrastText,
+    outlineFocused = `inset 0px 0px 0.1rem 0.1rem ${focusColor}`,
     outline = {
       "&::after": [PositionAbsolute, Fill, makeTransition('box-shadow'), {
         top: 0,
@@ -88,20 +68,26 @@ function makeDarkTheme(): ITheme & any {
       }
     },
     Input = {
-      field: [makePaddingRem(0.5, 1.2), {
+      colors: {
+        placeholder: darken(primary.contrastText, 0.4)
+      },
+      field: {
+        ...makePaddingRem(0.5, 1.2),
         fontSize: rem(1.3),
         border: "none",
         outline: "none"
-      }]
+      }
     },
     Select = Run(() => {
       const
-        text = [Ellipsis, OverflowHidden, {
+        text = {
+          ...Ellipsis, ...OverflowHidden,
           color: primary.contrastText
-        }],
-        highlightBg = [text, {
+        },
+        highlightBg = {
+          ...text,
           backgroundColor: action.main
-        }],
+        },
         hover = {
           "&:hover": {
             backgroundColor: darken(action.main, 0.4),
@@ -118,42 +104,44 @@ function makeDarkTheme(): ITheme & any {
 
       return {
         colors,
-        paper: [PositionRelative, OverflowHidden, {
+        paper: {
+          ...PositionRelative,
+          ...OverflowHidden,
           background: colors.bg,
           color: colors.text
-        }],
-        option: [{
+        },
+        option: {
           focused: [text, outline],
           selected: [text, hover, highlightBg, highlightBg, hover],
           root: [text, hover]
-        }],
+        },
         divider: {
           height: 6 * 2
         }
       }
     }),
-    SplitPane = [{
-      colors: [{
+    SplitPane = {
+      colors: {
         splitter: darken(primary.dark, 0.8),
         splitterHover: action.main,
         pane1Bg: darken(primary.dark, 0.2),
         pane2Bg: primary.dark
-      }]
-    }],
-    Milestone = [{
+      }
+    },
+    Milestone = {
       colors: {
         bg: darken(primary.dark, 0.6),
         actionBg: darken(primary.dark, 0.4)
       }
-    }],
-    IssuesLayout = [{
+    },
+    IssuesLayout = {
       colors: {
         bg: darken(primary.dark, 0.7),
         controlsBg: `content-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
         controlsBgHover: darkPalette.action.main
       }
-    }],
-    IssueDetails = [{
+    },
+    IssueDetails = {
       colors: {
         none: darken(primary.contrastText, 0.4),
         bg: darken(primary.dark, 0.8),
@@ -162,11 +150,13 @@ function makeDarkTheme(): ITheme & any {
         commentBorder: darken(primary.main, 0.8),
         commentBodyBg: darken(primary.main, 0.85),
         commentText: darken(primary.contrastText, 0.3),
-        connection: darken(primary.main, 0.6)
+        connection: darken(primary.main, 0.6),
+        focusColor,
+        focusColorText
       }
-    }],
+    },
 
-    IssueListItem = [{
+    IssueListItem = {
       colors: Run(() => {
         const
           normal = {
@@ -182,7 +172,9 @@ function makeDarkTheme(): ITheme & any {
             text: primary.contrastText,
             marker: Transparent
           },
-          makeStatusColor = (color: Color): any => Object.assign({}, normal, {
+          // eslint-disable-next-line
+          makeStatusColor = (color: Color) => ({
+            ...normal,
             bg: `border-box radial-gradient(${color.main}, ${lighten(color.main, 0.2)})`,//darken(primary.dark,0.4),
             topBg: Transparent,//`border-box radial-gradient(${lighten(color.main, 0.1)}, ${lighten(color.main, 0.3)})`,
             labelScrollFade: lighten(color.main, 0.1),//`$, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
@@ -200,49 +192,100 @@ function makeDarkTheme(): ITheme & any {
 
       })
 
-    }],
-    Header = [{
+    },
+    Header = {
       colors: {
         bg: `content-box radial-gradient(${darken(primary.dark, 0.7)}, ${darken(primary.dark, 0.8)})`,
         logoBg: action.main,
         logoBoxShadow: "inset 0 0 0.4rem rgba(10,10,10,0.5)",
         boxShadow: "0 0 1rem 0.4rem rgba(10,10,10,0.5)"
       }
-    }],
-    Labels = [{
+    },
+    Labels = {
       colors: {
         addBg: darken(primary.dark, 0.6),
-        add: primary.contrastText
+        add: primary.contrastText,
+        text: "#DDB958"
       }
-    }],
-    Avatar = [{
+    },
+    Avatar = {
       colors: {
         bg: darken(primary.main, 0.9),
         default: darken(primary.contrastText, 0.2)
       }
-    }],
-    Chip = [{
+    },
+    Chip = {
       dimen: {
         small: 1.4,
         normal: 2
       }
-    }],
-    Button = [{
-      overlayFAB: [makeTransition("opacity"),{
-        background: darken(primary.dark,0.4),
+    },
+    Button = {
+      overlayFAB: {
+        ...makeTransition("opacity"),
+        background: darken(primary.dark, 0.4),
         borderRadius: rem(0.2),
         opacity: 0.8,
-        "&:hover": [{
+        "&:hover": {
           opacity: 1
-        }]
-      }],
+        }
+      },
+      colors: {}
+    },
+    Backdrop = {
       colors: {
+        bg: alpha(darken(primary.main, 0.8), 0.8)
+      }
+    },
+    Dialog = {
+      colors: {
+        titleBg: darken(primary.main, 0.8),
+        titleColor: primary.contrastText,
+        contentBg: darken(primary.main, 0.9),
+        contentColor: primary.contrastText,
+        actionsBg: darken(primary.main, 0.7),
+        actionsColor: primary.contrastText
+      }
+    },
+    TextField = {
+      colors: {
+        bg: darken(primary.main, 0.9)
+      }
+    },
+    StatusBar = {
+      colors: {
+        bg: `content-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,
+        text: darken(primary.contrastText, 0.2),
+        progressBar: darken(primary.contrastText, 0.5),
+        progress: action.main,
+        divider: `inset -0.1rem 0.2rem 0.1rem -0.1rem ${lighten(primary.main, 0.1)}`
+      },
+      dimensions: {
+        height: rem(2),
+        progressHeight: rem(0.2)
+      }
+    },
+    Notifications = {
+      colors: {},
+      dimensions: {}
+    },
+    BlockingWorkProgress = {
+      colors: {
+        bg: `border-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,
+        backdrop: tiny(primary.dark).setAlpha(0.6).toRgbString(),
+        text: primary.contrastText
 
       }
-    }]
+    },
+    MenuList = {
+      colors: {
+        bg: `border-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,
+        text: primary.contrastText
+      },
+      elevation: elevationStyles.elevation6
+    }
 
-
-  return createMuiTheme(mergeStyles({
+  return {
     palette: darkPalette,
     typography: {
       useNextVariants: true,
@@ -262,7 +305,7 @@ function makeDarkTheme(): ITheme & any {
       ].join(','),
       fontWeightLight: 300,
       fontWeightRegular: 400,
-      fontWeightMedium: 500,
+      fontWeightMedium: 500
 
     },
 
@@ -289,14 +332,22 @@ function makeDarkTheme(): ITheme & any {
       Labels,
       Avatar,
       Chip,
-      Button
+      Button,
+      Backdrop,
+      Dialog,
+      TextField,
+      StatusBar,
+      Notifications,
+      BlockingWorkProgress,
+      MenuList
     },
 
     outline,
 
-    focus: [makeTransition('box-shadow'), {
-      boxShadow: `inset 0px 0px 0.1rem 0.1rem ${action.main}`
-    }],
+    focus: {
+      ...makeTransition('box-shadow'),
+      boxShadow: `inset 0px 0px 0.1rem 0.1rem ${focusColor}`
+    },
 
     overrides: {
       MuiDivider: {
@@ -305,6 +356,12 @@ function makeDarkTheme(): ITheme & any {
           height: rem(0.1)
         }
       }
+    },
+
+    zIndex: {
+      tooltip: 2000,
+      notifications: 1999,
+      blockingWork: 1998
     },
 
     highlightjs: {
@@ -385,10 +442,45 @@ function makeDarkTheme(): ITheme & any {
         textDecoration: "underline"
       }
     }
-  })) as any
+  }
 }
 
-export const darkTheme = makeDarkTheme()
+const darkThemeExt = makeDarkThemeExt()
+
+export type EpicThemeExt = typeof darkThemeExt
+
+function makeDarkTheme(): any {
+  return createMuiTheme(darkThemeExt as any) as any
+}
+
+export const darkTheme: MUITheme & EpicThemeExt = makeDarkTheme() as any
+
+
+declare global {
+  interface ITypographyStyles {
+    highlight: NestedStyles
+  }
+
+  interface IComponentStyles {
+
+    Typography: ITypographyStyles
+    SplitPane: ISplitPaneStyles
+    Header: IHeaderStyles
+    IssuesLayout: IIssuesLayoutStyles
+    Labels: ILabelsStyles
+    IssueListItem: IIssueListItemStyles
+    IIssueDetails: IIssueDetailsStyles
+
+  }
+
+  interface ITheme {
+    palette: IThemePalette
+    components: IComponentStyles
+  }
+
+  type Theme = EpicThemeExt & MUITheme
+}
+
 
 /**
  * {

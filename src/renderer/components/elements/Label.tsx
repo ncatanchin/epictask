@@ -5,7 +5,7 @@ import {
   makeHeightConstraint,
   makeMarginRem, makePaddingRem, makeTransition, MarginProps,
   mergeClasses, NestedStyles, PaddingProps,
-  rem,
+  rem, StyleDeclaration,
   withStatefulStyles
 } from "renderer/styles/ThemedStyles"
 import {ILabel} from "common/models/Label"
@@ -19,7 +19,7 @@ import {guard} from "typeguard"
 const log = getLogger(__filename)
 
 
-function baseStyles(theme: Theme): NestedStyles {
+function baseStyles(theme: Theme): StyleDeclaration {
   const
     {palette} = theme,
     {primary, secondary} = palette

@@ -248,3 +248,8 @@ export function assert(test:(() => boolean) | boolean,msg?:null | (() => string)
 
 	if (!result) throw Error(text)
 }
+
+
+export function toDashCase(str:string):string {
+  return str.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`)
+}

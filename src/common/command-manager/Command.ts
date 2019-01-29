@@ -40,11 +40,15 @@ export const GlobalKeys = {
 	[CommonKeys.Space]: 'Space',
 	[CommonKeys.Delete]: 'Delete',
 	[CommonKeys.Backspace]: 'Backspace'
-	// [CommonKeys.SetAssignee]: ['alt+a','a'],
-	// [CommonKeys.SetMilestone]: ['alt+m','m'],
-	// [CommonKeys.AddLabels]: ['alt+t','t'],
-	// [CommonKeys.CreateComment]: ['alt+c','c']
 
+}
+
+
+export function isCommonKey(accelerator:TCommandDefaultAccelerator | TCommandDefaultAccelerator[],commonKey:CommonKeys):boolean {
+	if (!Array.isArray(accelerator)) {
+		accelerator = [accelerator]
+	}
+	return accelerator.some(accel => [commonKey,GlobalKeys[commonKey]].includes(accel))
 }
 
 export const App = Object.assign({}, GlobalKeys, {})
@@ -58,7 +62,7 @@ const
 	log = getLogger(__filename)
 
 
-export type TCommandDefaultAccelerator = string|CommonKeys|any
+export type TCommandDefaultAccelerator = string|CommonKeys
 
 
 /**

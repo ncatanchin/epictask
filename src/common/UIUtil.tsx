@@ -380,3 +380,8 @@ export function getZIndex (element):number {
 export function isHTMLElement(e:any): e is HTMLElement {
 	return e instanceof HTMLElement
 }
+
+
+export function isDialogOpen():boolean {
+	return (getStoreState() as IRootRendererState).UIState.dialogs.length > 0
+}

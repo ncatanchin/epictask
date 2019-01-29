@@ -5,6 +5,7 @@ import {IUser} from "common/models/User"
 import {IAcceleratorMap} from "common/models/CommandTypes"
 import {IDataSyncStatus} from "common/Types"
 import {IIssue} from "common/models/Issue"
+import {IAppStatus, makeDefaultAppStatus} from "common/models/AppStatus"
 
 
 export interface IIssueEdit {
@@ -27,10 +28,7 @@ export class AppState implements State<string> {
 	selectedOrgId:number | null
   selectedIssueIds = Array<number>()
 
-	editing: IIssueEdit = {
-		open: false,
-		issue: null
-	}
+	status: IAppStatus = makeDefaultAppStatus()
 
 	customAccelerators:IAcceleratorMap
 
@@ -51,7 +49,11 @@ export class AppState implements State<string> {
 	toJS():Object {
 		return {...this, config: null, editing: {
         open: false,
-				issue: null
+				issue: null,
+				status: {
+        	...this.status,
+          blockingWork: []
+				}
       }}
 	}
 

@@ -83,7 +83,9 @@ export default class Milestone extends React.Component<P, S> {
   private onCloseSelect = () => this.setState({open: false})
 
   private onSelected = (milestone: IMilestone | null) => {
-    guard(() => this.props.onSelected(milestone))
+    guard(() => this.props.onSelected(
+      getValue(() => milestone.id === this.props.milestone.id) ? null : milestone)
+    )
     this.onCloseSelect()
   }
 

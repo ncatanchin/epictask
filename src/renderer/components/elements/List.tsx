@@ -27,21 +27,21 @@ function baseStyles(theme): any {
     {primary, secondary} = palette
 
   return {
-    root: [Fill, PositionRelative]
+    root: {...Fill, ...PositionRelative}
   }
 }
 
 export type ListRowProps<T = any> = VListRowProps & {
   dataSet: IDataSet<T>
-  selectedIndexesContext:React.Context<Array<number>>,
+  selectedIndexesContext: React.Context<Array<number>>,
   onClick: () => void
 }
 
 export type ListRowRenderer<T = any> = (props: ListRowProps<T>) => React.ReactNode;
 
 interface P<T> extends StyledComponentProps<string>, Omit<VListProps, "rowCount"> {
-  onSelectedIndexesChanged?: (dataSet: IDataSet<T>,indexes: number[]) => void
-  selectedIndexes?: number[]
+  onSelectedIndexesChanged: (dataSet: IDataSet<T>, indexes: number[]) => void
+  selectedIndexes: number[]
   rowRenderer: ListRowRenderer<T>
   dataSet: IDataSet<T>
   id: string
@@ -62,50 +62,27 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
       selectedIndexes,
       commandManagerOptions,
       onSelectedIndexesChanged,
-      rowRenderer:finalRowRenderer,
+      rowRenderer: finalRowRenderer,
       rowHeight,
       ...other
     } = props
   assert(isDefined(id), "ID must be provided")
   const
-    [internalSelectedIndexes,setInternalSelectedIndexes] = useState<Array<number>>(selectedIndexes || Array<number>()),
-    internalSelectedIndexesRef = useRef<Array<number>>(internalSelectedIndexes),
+    // [internalSelectedIndexes,setInternalSelectedIndexes] = useState<Array<number>>(selectedIndexes || Array<number>()),
+    // internalSelectedIndexesRef = useRef<Array<number>>(internalSelectedIndexes),
+    moveSelectionRef = useRef<(increment: number,shiftHeld?: boolean) => void>(null),
     dataSetRef = useRef<IDataSet<T>>(dataSet),
-    selectedIndexesContextRef = useRef<React.Context<Array<number>>>(React.createContext(internalSelectedIndexesRef.current)),
-    selectedIndexesContext = selectedIndexesContextRef.current,
-    {props:commandManagerProps} = useCommandManager(id,builder => {
-      if (selectable)
-        builder
-          .command("CommandOrControl+a", selectAll, {
-            overrideInput: false
-          })
-          .command("Escape", deselectAll)
-          .command("Shift+ArrowDown", makeMoveSelection(1,true), {
-            overrideInput: false
-          })
-          .command("Shift+ArrowUp", makeMoveSelection(-1, true), {
-            overrideInput: false
-          })
-          .command("ArrowDown", makeMoveSelection(1), {
-            overrideInput: false
-          })
-          .command("ArrowUp", makeMoveSelection(-1), {
-            overrideInput: false
-          })
-      return builder.make()
-    }, rootRef,commandManagerOptions)
-
-
-
+    selectedIndexesContextRef = useRef<React.Context<Array<number>>>(React.createContext(selectedIndexes)),
+    selectedIndexesContext = selectedIndexesContextRef.current
 
   useEffect(() => {
-    log.info("Updating list dataset")
+    log.debug("Updating list dataset")
     if (!dataSet) return
     const
       prevDataSet = dataSetRef.current,
-      dataChanged = !_.isEqual(prevDataSet,dataSet)
+      dataChanged = !_.isEqual(prevDataSet, dataSet)
 
-    log.info("Updating list dataset - change",dataChanged, prevDataSet, dataSet)
+    log.debug("Updating list dataset - change", dataChanged, prevDataSet, dataSet)
     if (!dataChanged) {
       return
     }
@@ -115,42 +92,42 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
   }, [dataSet, dataSet.data, dataSet.total])
 
 
-  useLayoutEffect(() => {
-    if (selectedIndexes && !_.isEqual(internalSelectedIndexesRef.current,selectedIndexes)) {
-      internalSelectedIndexesRef.current = selectedIndexes
-      setInternalSelectedIndexes(selectedIndexes)
-    }
-  }, [selectedIndexes])
+  // useLayoutEffect(() => {
+  //   if (selectedIndexes && !_.isEqual(internalSelectedIndexesRef.current,selectedIndexes)) {
+  //     internalSelectedIndexesRef.current = selectedIndexes
+  //     setInternalSelectedIndexes(selectedIndexes)
+  //   }
+  // }, [selectedIndexes])
 
   /**
    * Set selected indexes
    *
    * @param newSelectedIndexes
    */
-  const setSelectedIndexes = useCallback((newSelectedIndexes:number[]):void => {
-    if (!selectable || _.isEqual(newSelectedIndexes,internalSelectedIndexesRef.current)) return
+  const setSelectedIndexes = useCallback((newSelectedIndexes: number[]): void => {
+    if (!selectable) return
 
     newSelectedIndexes = [...newSelectedIndexes]
 
-    setInternalSelectedIndexes(newSelectedIndexes)
-    internalSelectedIndexesRef.current = newSelectedIndexes
+    // setInternalSelectedIndexes(newSelectedIndexes)
+    // internalSelectedIndexesRef.current = newSelectedIndexes
 
-    if (isFunction(onSelectedIndexesChanged)) {
-      onSelectedIndexesChanged(dataSetRef.current, newSelectedIndexes)
-    }
-  },[dataSetRef.current, internalSelectedIndexes, selectedIndexes])
+    //if (isFunction(onSelectedIndexesChanged)) {
+    onSelectedIndexesChanged(dataSetRef.current, newSelectedIndexes)
+    //}
+  }, [dataSetRef.current, selectedIndexes])
 
   /**
    * Select all items in the list
    */
-  function selectAll():void {
-    setSelectedIndexes(_.range(0,dataSetRef.current.total))
+  function selectAll(): void {
+    setSelectedIndexes(_.range(0, dataSetRef.current.total))
   }
 
   /**
    * Select all items in the list
    */
-  function deselectAll():void {
+  function deselectAll(): void {
     setSelectedIndexes([])
   }
 
@@ -160,39 +137,59 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
    * @param increment
    * @param shiftHeld
    */
-  function moveSelection(increment:number, shiftHeld:boolean = false):void {
-    const
-      internalSelectedIndexes = internalSelectedIndexesRef.current,
-      dataSet = dataSetRef.current,
-      start = increment > 0 ? _.max([...internalSelectedIndexes,0]) : Math.max(_.min(internalSelectedIndexes),0),
-      dest = Math.min(Math.max(0,start + increment),Math.max(dataSet.total - 1,0))
-
-    if (!shiftHeld) {
-      setSelectedIndexes([dest])
-    } else {
+  useEffect(() => {
+    moveSelectionRef.current = (increment: number, shiftHeld: boolean = false): void => {
       const
-        min = Math.min(start,dest),
-        max = Math.max(start,dest) + (increment > 0 ? 1 : 0),
-        indexRange = _.range(min,max),
-        newSelectedIndexes = [...internalSelectedIndexes,...indexRange],
-        filteredIndexes = _.uniq(newSelectedIndexes)
+        dataSet = dataSetRef.current,
+        start = increment > 0 ? _.max([...selectedIndexes, 0]) : Math.max(_.min(selectedIndexes), 0),
+        dest = Math.min(Math.max(0, start + increment), Math.max(dataSet.total - 1, 0))
 
-      setSelectedIndexes(filteredIndexes)
+      if (!shiftHeld) {
+        setSelectedIndexes([dest])
+      } else {
+        const
+          min = Math.min(start, dest),
+          max = Math.max(start, dest) + (increment > 0 ? 1 : 0),
+          indexRange = _.range(min, max),
+          newSelectedIndexes = [...selectedIndexes, ...indexRange],
+          filteredIndexes = _.uniq(newSelectedIndexes)
+
+        setSelectedIndexes(filteredIndexes)
+      }
+
+      guard(() => listRef.current && listRef.current.scrollToRow(dest))
     }
+  }, [dataSetRef.current, selectedIndexes, listRef.current])
 
-    guard(() => listRef.current && listRef.current.scrollToRow(dest))
-  }
-
-  function makeMoveSelection(increment:number, shiftHeld:boolean = false):() => void {
-    return () => moveSelection(increment,shiftHeld)
-  }
+  const makeMoveSelection = useCallback((increment: number, shiftHeld: boolean = false): (() => void) => {
+    return () => moveSelectionRef.current(increment, shiftHeld)
+  }, [moveSelectionRef.current])
 
   /**
    * On appropriate changes, update registered commands
    */
 
-
-
+  const {props: commandManagerProps} = useCommandManager(id, useCallback(builder => {
+    if (selectable)
+      builder
+        .command("CommandOrControl+a", selectAll, {
+          overrideInput: false
+        })
+        .command("Escape", deselectAll)
+        .command("Shift+ArrowDown", makeMoveSelection(1, true), {
+          overrideInput: false
+        })
+        .command("Shift+ArrowUp", makeMoveSelection(-1, true), {
+          overrideInput: false
+        })
+        .command("ArrowDown", makeMoveSelection(1), {
+          overrideInput: false
+        })
+        .command("ArrowUp", makeMoveSelection(-1), {
+          overrideInput: false
+        })
+    return builder.make()
+  },[makeMoveSelection,selectAll]), rootRef, commandManagerOptions)
 
 
   /**
@@ -200,28 +197,28 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
    *
    * @param rowProps
    */
-  const rowRenderer = useCallback((rowProps:VListRowProps):React.ReactNode => {
-    return finalRowRenderer(Object.assign({},rowProps,{
+  const rowRenderer = useCallback((rowProps: VListRowProps): React.ReactNode => {
+    return finalRowRenderer(Object.assign({}, rowProps, {
       dataSet,
       selectedIndexesContext,
-      onClick: (event:React.MouseEvent) => {
-        let newSelectedIndexes = [...internalSelectedIndexes]
+      onClick: (event: React.MouseEvent) => {
+        let newSelectedIndexes = [...selectedIndexes]
 
         const
           {index} = rowProps
 
         if (event.altKey || event.metaKey) {
           if (!newSelectedIndexes.includes(index)) {
-            newSelectedIndexes = [...newSelectedIndexes,index]
+            newSelectedIndexes = [...newSelectedIndexes, index]
           } else {
             newSelectedIndexes = newSelectedIndexes.filter(it => it !== index)
           }
         } else if (event.shiftKey) {
           const
-            min = Math.min(index,...newSelectedIndexes),
-            max = Math.max(index,...newSelectedIndexes)
+            min = Math.min(index, ...newSelectedIndexes),
+            max = Math.max(index, ...newSelectedIndexes)
 
-          newSelectedIndexes = _.range(min,Math.min(max + 1,dataSetRef.current.total))
+          newSelectedIndexes = _.range(min, Math.min(max + 1, dataSetRef.current.total))
         } else {
           newSelectedIndexes = [index]
         }
@@ -229,22 +226,23 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
         setSelectedIndexes(newSelectedIndexes)
       }
     }) as any)
-  },[internalSelectedIndexes, dataSet, dataSetRef.current])
+  }, [selectedIndexes, dataSet, dataSetRef.current])
 
-  const {Provider:SelectedIndexesProvider} = selectedIndexesContext
+  const {Provider: SelectedIndexesProvider} = selectedIndexesContext
 
   return <div ref={rootRef} className={classes.root} {...commandManagerProps}>
     {dataSet.total > 0 &&
-    <SelectedIndexesProvider value={internalSelectedIndexes}>
+    <SelectedIndexesProvider value={selectedIndexes}>
       <VAutoSizer>
         {({width, height}) => <VList
           ref={listRef}
           height={height}
           width={width}
+          tabIndex={-1}
+
           rowCount={dataSet.total}
           rowHeight={rowHeight}
           rowRenderer={rowRenderer}
-
         />}
       </VAutoSizer>
     </SelectedIndexesProvider>}
