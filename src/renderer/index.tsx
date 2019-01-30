@@ -1,10 +1,8 @@
 ///<reference path="../../typings/custom.d.ts"/>
 import 'source-map-support/register'
-//import "react-hot-loader/patch"
-//import "@babel/polyfill"
+import "react-hot-loader/patch"
 import "common/util/Ext"
 import "./ReactHotConfig"
-//import Sugar from "sugar"
 
 import "./assets/fonts/fonts.global.scss"
 import "./assets/css/global.scss"

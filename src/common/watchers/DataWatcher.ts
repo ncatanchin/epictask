@@ -38,8 +38,9 @@ async function loadSelectedIssueData(issueIds = getStoreState().AppState.selecte
 	}
 
 	const data = await getIssueEvents(issueIds[0])
-
-	;(await getDataActions()).setIssueEventData(data)
+	if (data) {
+    ;(await getDataActions()).setIssueEventData(data)
+  }
 }
 
 /**

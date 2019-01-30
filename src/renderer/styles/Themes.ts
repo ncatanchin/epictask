@@ -45,6 +45,7 @@ function makeDarkThemeExt() {
     focusColor = action.main,
     focusColorText = action.contrastText,
     outlineFocused = `inset 0px 0px 0.1rem 0.1rem ${focusColor}`,
+    headerBg = `content-box radial-gradient(${darken(primary.dark, 0.7)}, ${darken(primary.dark, 0.8)})`,
     outline = {
       "&::after": [PositionAbsolute, Fill, makeTransition('box-shadow'), {
         top: 0,
@@ -195,7 +196,7 @@ function makeDarkThemeExt() {
     },
     Header = {
       colors: {
-        bg: `content-box radial-gradient(${darken(primary.dark, 0.7)}, ${darken(primary.dark, 0.8)})`,
+        bg: headerBg,
         logoBg: action.main,
         logoBoxShadow: "inset 0 0 0.4rem rgba(10,10,10,0.5)",
         boxShadow: "0 0 1rem 0.4rem rgba(10,10,10,0.5)"
@@ -283,6 +284,12 @@ function makeDarkThemeExt() {
         text: primary.contrastText
       },
       elevation: elevationStyles.elevation6
+    },
+    SearchProvider = {
+      colors: {
+        bg: headerBg,
+        text: darken(primary.contrastText,0.3)
+      }
     }
 
   return {
@@ -339,7 +346,8 @@ function makeDarkThemeExt() {
       StatusBar,
       Notifications,
       BlockingWorkProgress,
-      MenuList
+      MenuList,
+      SearchProvider,
     },
 
     outline,

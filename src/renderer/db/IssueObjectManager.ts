@@ -59,7 +59,7 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 				{user,enabledRepoIds} = state.AppState,
 				repos = await db.repos.where("id").anyOf(enabledRepoIds).toArray()
 
-			log.info("Syncing issues", repos)
+			log.debug("Syncing issues", repos)
 			if (!user) {
 				log.warn("Can not sync issues, not authenticated")
 				return false
@@ -99,7 +99,7 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 							affiliation: "all"
             })
 
-					log.info(`Syncing issues for ${repo.full_name} since ${params.since} `)
+					log.debug(`Syncing issues for ${repo.full_name} since ${params.since} `)
 
 					// SYNC LABELS
 					const labels = await getLabels(repo)

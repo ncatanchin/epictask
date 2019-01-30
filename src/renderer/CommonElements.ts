@@ -1,6 +1,6 @@
 import {convertEnumValuesToString} from "common/ObjectUtil"
 
-export enum CommandContainer {
+export enum CommonElement {
   App,
   Settings,
   Dialog,
@@ -8,9 +8,10 @@ export enum CommandContainer {
   IssueView,
   IssueEditForm,
   IssueList,
+  IssueSearch,
   RepoSelect
 }
 
-export const CommandContainerIds = convertEnumValuesToString(CommandContainer)
+export const CommonElementIds = convertEnumValuesToString(CommonElement)
 
-export default CommandContainerIds
+export default CommonElementIds

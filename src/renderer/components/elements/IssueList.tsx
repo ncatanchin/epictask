@@ -28,7 +28,7 @@ import {makeCommandManagerAutoFocus} from "common/command-manager"
 import {issuesSortedAndFilteredSelector} from "common/store/selectors/DataSelectors"
 import {useFocused} from "renderer/command-manager-ui/CommandComponent"
 import FocusedDiv from "renderer/components/elements/FocusedDiv"
-import CommandContainerIds from "renderer/CommandContainers"
+import CommonElementIds from "renderer/CommonElements"
 import IssueViewController from "renderer/controllers/IssueViewController"
 import {confirmDialog} from "renderer/util/UIHelper"
 import {StyleRules} from "@material-ui/core/styles"
@@ -73,7 +73,7 @@ function baseStyles(theme: Theme): StyleDeclaration<Classes> {
       overflowX: "hidden"
     },
     search: {
-      ...FlexAuto,
+      //...FlexAuto,
       ...FillWidth
     },
     focused: {
@@ -114,7 +114,7 @@ export default StyledComponent<P,SP>(baseStyles,{
 })(function IssueList(props: P & SP): React.ReactElement<P & SP> {
   const
     {classes, searchChips, controller, selectedIssueIds, sortedIssues, ...other} = props,
-    id = CommandContainerIds.IssueList,
+    id = CommonElementIds.IssueList,
     makeSelectedIndexes = ():Array<number> => selectedIssueIds
       .map(id => sortedIssues.data.findIndex(issue => issue.id === id) as number)
       .filter(index => index !== -1)
@@ -171,7 +171,7 @@ export default StyledComponent<P,SP>(baseStyles,{
 
   return <FocusedDiv classes={{root:classes.root}}>
     <SearchProviderField
-      id="issue-search-field"
+      id={CommonElementIds.IssueSearch}
       classes={{
         root: classes.search
       }}

@@ -141,3 +141,8 @@ export function SimpleDialogActions({onComplete, classes, dialog, cancelLabel = 
   </>
 }
 
+
+
+export function areDialogsOpen():boolean {
+  return getRendererStoreState().UIState.dialogs.length > 0
+}

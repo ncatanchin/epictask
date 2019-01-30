@@ -42,7 +42,7 @@ import {createIssue, patchIssue} from "renderer/net/IssueAPI"
 import {useCommandManager} from "renderer/command-manager-ui"
 import {makeCommandManagerAutoFocus} from "common/command-manager"
 import {useRef} from "react"
-import CommandContainerIds from "renderer/CommandContainers"
+import CommonElementIds from "renderer/CommonElements"
 import MUITextField from "@material-ui/core/TextField/TextField"
 import IssueEditController, {IssueEditContext} from "renderer/controllers/IssueEditController"
 import {useController, withController} from "renderer/controllers/Controller"
@@ -117,7 +117,7 @@ const selectors = {
 
 export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(props: P & SP): React.ReactElement<P & SP> {
   const
-    {id = CommandContainerIds.IssueEditForm, classes, onClose, issue, repo, labels, milestones, collaborators, data,...other} = props,
+    {id = CommonElementIds.IssueEditForm, classes, onClose, issue, repo, labels, milestones, collaborators, data,...other} = props,
     [controller,updateController] = useController<IssueEditController>(),
     setIssuePatch = useCallback(
       (patchFn:((patch:Partial<IssuesUpdateParams>) => Partial<IssuesUpdateParams>)) => {

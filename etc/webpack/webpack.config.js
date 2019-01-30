@@ -18,7 +18,7 @@ module.exports = (isMain) => {
   function makeExternals() {
     const whitelist = isMain ? [] :
 			///core-js/,/babel/,/sugar/,/material-ui/,/react-hot/,/source-map/
-			[/webpack/,/codemirror/,/highlight\.js/,/octokit/,/node-fetch/]
+			[/webpack/,/codemirror/,/highlight\.js/,/octokit/,/hot-loader/,/node-fetch/,/react-hot/,/material-ui/]
   	return nodeExternals({
       whitelist
     })

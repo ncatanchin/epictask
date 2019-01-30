@@ -8,8 +8,6 @@ import {scanObjects} from "./SearchUtil"
 
 const log = getLogger(__filename)
 
-export type SearchCriteria = { [p: string]: number | string }
-
 export interface ISearchChipComponentProps<T, PK, V> {
   chip: ISearchChip<T, PK, V>
   onRemove: (chip: ISearchChip<T, PK, V>) => void
@@ -38,7 +36,6 @@ export interface ISearchChip<T = any, PK = any, V = any, D extends ISearchChipDa
 }
 
 export interface ISearchChipType<T = any, PK = any, V = any, D extends ISearchChipData<V> = any, ChipType extends ISearchChip<T, PK, V, D> = any> {
-  //new?():ISearchChip<T,PK,V>
   new(...args: any[]): ChipType
 }
 
@@ -47,7 +44,6 @@ export interface ISearchFilter<T = any, PK = any, V = any, D extends ISearchChip
   supportedChips: Array<ISearchChipType>
   name: string
 
-  //<T, PK, V, D>
   hydrate(data: D): ISearchChip
 
   filter(chips: Array<ISearchChip<T, PK, V, D>>, results: T[]): T[]
@@ -57,8 +53,10 @@ export interface ISearchFilter<T = any, PK = any, V = any, D extends ISearchChip
 
 export class SearchProvider<DB extends Dexie, TableName extends keyof DB, T, PK, V = any> {
 
-  constructor(public db: DB, public tableName: TableName, private filters: Array<ISearchFilter<T, PK, V>>) {
+  defaultChips:Array<ISearchChip>
 
+  constructor(public db: DB, public tableName: TableName, private filters: Array<ISearchFilter<T, PK, V>>,...defaultChips:Array<ISearchChip>) {
+    this.defaultChips = defaultChips
   }
 
 
@@ -87,7 +85,11 @@ export class SearchProvider<DB extends Dexie, TableName extends keyof DB, T, PK,
     return chips
   }
 
-  filter(chips: Array<ISearchChip>, items: Array<T>): Array<T> {
+  filter(chips: Array<ISearchChip> | null, items: Array<T>): Array<T> {
+    chips = chips || []
+    if (!chips.length)
+      chips = [...this.defaultChips]
+
     let results = [...items]
     this.filters.forEach(filter => {
       results = filter.filter(chips as any, results)

@@ -7,11 +7,11 @@ import {
   FlexColumn,
   FlexRow,
   FlexScale,
-  FlexWrap,
-  IThemedProperties,
+  FlexWrap, HeightProperties,
+  IThemedProperties, makeFlex,
   makeHeightConstraint, makeMargin,
   makeMarginRem,
-  makePadding,
+  makePadding, makeTransition,
   PositionRelative, rem,
   remToPx,
   StyleDeclaration
@@ -19,18 +19,20 @@ import {
 import {StyledComponentProps, StyleRules} from "@material-ui/core/styles/withStyles"
 import {getValue, guard} from "typeguard"
 import {StyledComponent, StyledElement} from "renderer/components/elements/StyledComponent"
-import {CommandManagerProps, useFocused} from "renderer/command-manager-ui"
+import { useFocused} from "renderer/command-manager-ui"
 import {ISearchChip, SearchProvider} from "renderer/search/Search"
 import Input from "@material-ui/core/Input/Input"
 import Chip from "@material-ui/core/Chip/Chip"
 import Dexie from "dexie"
 import Popper from "@material-ui/core/Popper/Popper"
-import Slide from "@material-ui/core/Slide/Slide"
 import MenuList from "@material-ui/core/MenuList/MenuList"
 import MenuItem from "@material-ui/core/MenuItem/MenuItem"
 import withStyles from "renderer/styles/withStyles"
 import {getContrastText} from "renderer/styles/MaterialColors"
 import * as _ from "lodash"
+import Grow from "@material-ui/core/Grow/Grow"
+import * as classNames from "classnames"
+import FocusedDiv from "renderer/components/elements/FocusedDiv"
 
 const
   log = getLogger(__filename)
@@ -38,19 +40,29 @@ const
 
 type SearchProviderFieldClasses = "root" | "input" |
   "chip" | "chipKey" | "chipValue" | "field" | "availableChip" | "availableChips" |
-  "chipDescription" | "availableChipItem"
+  "chipDescription" | "availableChipItem" | "visible"
 
 
 function baseStyles(theme: Theme): StyleDeclaration<SearchProviderFieldClasses> {
   const
-    {palette, components: {Select, MenuList, Labels, Input}, spacing: {unit}} = theme,
+    {palette, components: {Select, MenuList, Labels, Input, SearchProvider}, spacing: {unit}} = theme,
     {primary, secondary} = palette,
     rowElementHeight = remToPx(2)
 
   return {
     root: {
       ...FlexColumn,
-      ...PositionRelative
+      ...PositionRelative,
+      ...makeFlex(0,0,0),
+      ...makeTransition([...HeightProperties,'flexShrink','flexGrow','flexBases','flex']),
+      background: SearchProvider.colors.bg,
+      color: SearchProvider.colors.text,
+      "&$visible": {
+
+      }
+    },
+    visible: {
+      ...FlexAuto
     },
     field: {
       ...FillWidth,
@@ -69,9 +81,9 @@ function baseStyles(theme: Theme): StyleDeclaration<SearchProviderFieldClasses> 
         borderBottom: 0
       },
 
-      '&::-webkit-input-placeholder': {
-        fontSize: rem(1.4),
-        fontWeight: '400',
+      '& ::-webkit-input-placeholder': {
+        fontSize: rem(1.2),
+        fontWeight: 400,
         color: Input.colors.placeholder
       }
     },
@@ -101,7 +113,6 @@ function baseStyles(theme: Theme): StyleDeclaration<SearchProviderFieldClasses> 
 
 interface P<DB extends Dexie = any, TableName extends keyof DB = any, T = any, PK = any, V = any> extends StyledComponentProps<SearchProviderFieldClasses> {
   id: string
-  commandManagerProps?: CommandManagerProps
   placeholder?: string
   chips: Array<ISearchChip<T, PK, V>>
   provider: SearchProvider<DB, TableName, T, PK, V>
@@ -129,20 +140,20 @@ export default StyledComponent<P, SP>(
   const
     {
       id,
-      commandManagerProps = {},
       isClearable = false,
       chips = Array<ISearchChip<T, PK, V>>(),
       classes,
-      placeholder = "Search...",
+      placeholder = "search...",
       onChanged,
       provider,
       theme,
-      innerRef,
       ...other
     } = props,
 
     // AVAILABLE CHIPS
     [availableChips, setAvailableChips] = useState<Array<ISearchChip<T, PK, V>>>([]),
+
+    innerRef = useRef<HTMLElement>(null),
 
     // QUERY STATE
     [query, setQuery] = useState<string>(""),
@@ -150,7 +161,9 @@ export default StyledComponent<P, SP>(
       setQuery(getValue(() => event.target.value, ""))
     }, [setQuery]),
     anchorEl = useRef<HTMLDivElement>(null),
-    open = useFocused(anchorEl) && getValue(() => query.length > 0, false),
+    focused = useFocused(anchorEl) || getValue(() => document.activeElement === innerRef.current || innerRef.current.contains(document.activeElement),false),
+    open = (focused && getValue(() => query.length > 0, false)),
+    visible = focused || open || chips.length > 0,
     [selectedIndex,setSelectedIndex] = useState(0),
     makeOnChipSelect = useCallback((newChip: ISearchChip<T, PK, V>): ((event: React.MouseEvent) => void) =>
       (event: React.MouseEvent) => {
@@ -162,26 +175,51 @@ export default StyledComponent<P, SP>(
     onChipRemove = useCallback((removeChip: ISearchChip<T, PK, V>) => {
       onChanged(chips.filter(chip => chip.id !== removeChip.id))
     }, [onChanged, chips]),
-    moveSelectionRef = useRef<(increment: number,shiftHeld?: boolean) => void>(null)
+    inputRef = useRef<HTMLInputElement>(null)
+
+  log.info("Focused",focused,visible)
+
+
+  const
+    onKeyDown = useCallback((event:React.KeyboardEvent):void => {
+      const
+        increment = event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : 0,
+        {nativeEvent} = event,
+        removeLastChip = event.key === "Backspace" && chips.length && getValue(() => query.length,0) === 0
+
+      log.info("event",event.key)
+      if (increment !== 0 || ["Enter","Escape"].includes(event.key) || removeLastChip) {
+        nativeEvent.preventDefault()
+        nativeEvent.stopPropagation()
+        nativeEvent.stopImmediatePropagation()
+      } else {
+        return
+      }
+
+      if (removeLastChip) {
+        onChanged(chips.slice(0,chips.length - 1))
+        return
+      } else if (event.key === "Enter") {
+        const chip = availableChips[selectedIndex]
+        if (chip)
+          makeOnChipSelect(chip)(null)
+        return
+      } else if (event.key === "Escape") {
+        setQuery("")
+        guard(() => inputRef.current.blur())
+        return
+      }
 
 
 
-  useEffect(() => {
-    moveSelectionRef.current = (increment: number, shiftHeld: boolean = false): void => {
       const
         start = increment > 0 ? _.max([selectedIndex, 0]) : Math.max(_.min([selectedIndex]), 0),
         dest = Math.min(Math.max(0, start + increment), Math.max(availableChips.length - 1, 0))
 
-
       setSelectedIndex(dest)
 
-      //guard(() => listRef.current && listRef.current.scrollToRow(dest))
-    }
-  }, [availableChips,open])
+    }, [chips,query,availableChips,selectedIndex,open])
 
-  const makeMoveSelection = useCallback((increment: number, shiftHeld: boolean = false): (() => void) => {
-    return () => moveSelectionRef.current(increment, shiftHeld)
-  }, [moveSelectionRef.current])
 
   // ON PROVIDER CHANGE - CLEAR
   useEffect(() => {
@@ -193,11 +231,14 @@ export default StyledComponent<P, SP>(
     setAvailableChips(query === "" ? [] : provider.searchChips(query))
   }, [provider, query])
 
-  return <div
+  return <FocusedDiv
     id={id}
     ref={innerRef}
-    className={classes.root}
-    {...commandManagerProps}
+    tabIndex={0}
+    onKeyDown={onKeyDown}
+    className={classNames(classes.root,{
+      [classes.visible]: visible
+    })}
   >
     <div ref={anchorEl} className={classes.field}>
       {chips.map(chip => <SearchChipWrapper
@@ -206,36 +247,42 @@ export default StyledComponent<P, SP>(
         classes={classes}
         chip={chip}
         onRemove={onChipRemove}
+
       />)}
       <Input
         className={classes.input}
         value={query}
         placeholder={placeholder}
         onChange={onQueryChange}
+        inputRef={inputRef}
         disableUnderline/>
     </div>
 
     <Popper id={id} open={open} anchorEl={anchorEl.current} transition placement="bottom-start">
-      {({TransitionProps}) => (<Slide direction="down" {...TransitionProps}>
+      {({TransitionProps}) => (<Grow style={{ transformOrigin: '0 0 0' }} timeout={250} in={open} {...TransitionProps}>
         <MenuList
           classes={{root: classes.availableChips}}
           style={{
             minWidth: anchorEl && anchorEl.current.clientWidth
           }}>
-          {availableChips.map(chip => <MenuItem
-            key={chip.id}
-            onClick={makeOnChipSelect(chip)}
-            classes={{root: classes.availableChipItem}}
-          >
+          {availableChips.map((chip,index) =>
+            <MenuItem
+              key={chip.id}
+              onClick={makeOnChipSelect(chip)}
+              classes={{root: classes.availableChipItem}}
+              selected={selectedIndex === index}
+            >
 
-            <SearchChipWrapper theme={theme} chip={chip} classes={{root: classes.availableChip}}/>
-            <div className={classes.chipDescription}>{chip.description}</div>
-          </MenuItem>)}
+              <SearchChipWrapper theme={theme} chip={chip} classes={{root: classes.availableChip}}/>
+              <div className={classes.chipDescription}>{chip.description}</div>
+            </MenuItem>)
+          }
         </MenuList>
-      </Slide>)}
+      </Grow>)}
     </Popper>
-  </div>
+  </FocusedDiv>
 })
+
 
 interface ChipWrapperP<T = any, PK = any, V = any> extends IThemedProperties<SearchProviderFieldClasses> {
   onRemove?: ((chip: ISearchChip<T, PK, V>) => void) | null

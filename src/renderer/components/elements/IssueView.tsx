@@ -12,7 +12,7 @@ import {dataSelector, selectedIssuesSelector} from "common/store/selectors/DataS
 import FocusedDiv from "renderer/components/elements/FocusedDiv"
 import {useRef} from "react"
 import {useCommandManager, useFocused} from "renderer/command-manager-ui"
-import CommandContainerIds from "renderer/CommandContainers"
+import CommonElementIds from "renderer/CommonElements"
 import {getValue} from "typeguard"
 import IssueViewController from "renderer/controllers/IssueViewController"
 import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
@@ -50,7 +50,7 @@ export default StyledComponent<P, SP>(baseStyles, selectors, {
   const
     {classes, data, issues} = props,
     issue = issues[0],
-    id = CommandContainerIds.IssueView,
+    id = CommonElementIds.IssueView,
     [controller,setController] = useController(),
     updateController = setController,
     providerProps = [controller,updateController],

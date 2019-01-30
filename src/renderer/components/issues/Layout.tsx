@@ -41,8 +41,9 @@ import {useCommandManager} from "renderer/command-manager-ui"
 import {CommandContainerBuilder, CommandType, getCommandManager, ICommandContainerItems} from "common/command-manager"
 import IssueDetails from "renderer/components/elements/IssueDetails"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
-import CommandContainerIds, {CommandContainer} from "renderer/CommandContainers"
+import CommonElementIds, {CommonElement} from "renderer/CommonElements"
 import {showIssueEditDialog} from "renderer/components/elements/IssueEditDialog"
+import {areDialogsOpen} from "renderer/util/UIHelper"
 
 const AvatarDefaultURL = require("renderer/assets/images/avatar-default.png")
 
@@ -119,14 +120,14 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
     {classes, repo, org, user, isRepoEnabled, splitter} = props,
     rootRef = useRef<any>(null),
     repoSelectRef = useRef<any>(null),
-    id = CommandContainerIds.IssuesLayout,
+    id = CommonElementIds.IssuesLayout,
     [repoSelectOpen, setRepoSelectOpen] = useState<boolean>(false),
     {props: commandManagerProps} = useCommandManager(id, useCallback((builder: CommandContainerBuilder): ICommandContainerItems => {
         const commandManager = getCommandManager()
 
-      function makeContainerFocusHandler(container: CommandContainer.IssueList | CommandContainer.IssueView): () => void {
+      function makeContainerFocusHandler(container: CommonElement.IssueList | CommonElement.IssueView): () => void {
         return () => {
-          const containerId = CommandContainer[container]
+          const containerId = CommonElement[container]
           if (commandManager.isFocused(containerId)) {
             log.info("Already focused",containerId)
           } else {
@@ -172,10 +173,25 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
               overrideInput: true
             }
           )
-          .command("ArrowLeft", makeContainerFocusHandler(CommandContainer.IssueList), {
+          .command(
+            "CommandOrControl+f",
+            (cmd, event) => guard(() => {
+              if (areDialogsOpen())
+                return
+
+              $(`#${CommonElementIds.IssueSearch} input`).focus()
+            }),
+            {
+              name: "Search Issues",
+              type: CommandType.App,
+              hidden: false,
+              overrideInput: true
+            }
+          )
+          .command("ArrowLeft", makeContainerFocusHandler(CommonElement.IssueList), {
             overrideInput: false
           })
-          .command("ArrowRight", makeContainerFocusHandler(CommandContainer.IssueView), {
+          .command("ArrowRight", makeContainerFocusHandler(CommonElement.IssueView), {
             overrideInput: false
           })
           .make()
@@ -199,7 +215,7 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
 
   const rightControls = useMemo(() =>
     <div className={mergeClasses(classes.controls, repoSelectOpen && "open")}>
-      <RepoSelect id={CommandContainerIds.RepoSelect} selectRef={repoSelectRef} onOpen={onRepoSelectOpen} onSelection={onRepoSelection} value={repo}/>
+      <RepoSelect id={CommonElementIds.RepoSelect} selectRef={repoSelectRef} onOpen={onRepoSelectOpen} onSelection={onRepoSelection} value={repo}/>
       <Img
         src={getValue(() => user.avatar_url)}
         loader={<img src={AvatarDefaultURL}/>}

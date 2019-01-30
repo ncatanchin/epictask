@@ -221,7 +221,7 @@ export function extractError(error:Error):Error | null {
 
 //type EnumProp<E> = {[key in keyof E]:E}
 
-export type EnumValueMap<T> = {[key in keyof T]:keyof  T}
+export type EnumValueMap<T, V extends (string & keyof T) = any> = {[key in keyof T]:V}
 
 export function convertEnumValuesToString<T = any>(enumClazz:T):EnumValueMap<T> {
 	return Object.keys(enumClazz)

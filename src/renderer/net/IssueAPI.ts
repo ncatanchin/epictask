@@ -213,9 +213,14 @@ export async function findIssueIdFromEvent(repo:IRepo, event:IIssueEvent):Promis
 }
 
 
-export async function getIssueEvents(issueId:number):Promise<IIssueEventData> {
+export async function getIssueEvents(issueId:number):Promise<IIssueEventData | null> {
   const
-    issue = await getIssue(issueId),
+    issue = await getIssue(issueId)
+
+  if (!issue)
+    return null
+
+  const
     repo = await db.repos.where("url").equals(issue.repository_url).first(),
     events = await db.issueEvents.where("issue_id").equals(issueId).toArray(),
     comments = (await db.comments.where("issue_id").equals(issueId).toArray())

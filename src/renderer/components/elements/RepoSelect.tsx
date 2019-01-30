@@ -12,7 +12,7 @@ import ReactSelect from 'react-select'
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {useCallback, useEffect, useMemo, useState} from "react"
 import {useCommandManager} from "renderer/command-manager-ui"
-import CommandContainerIds from "renderer/CommandContainers"
+import CommonElementIds from "renderer/CommonElements"
 import {assert} from "common/ObjectUtil"
 const log = getLogger(__filename)
 

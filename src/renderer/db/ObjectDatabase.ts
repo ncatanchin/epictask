@@ -8,10 +8,15 @@ import {IOrg, OrgIndexes} from "common/models/Org"
 import {ILabel, LabelIndexes} from "common/models/Label"
 import {IMilestone, MilestoneIndexes} from "common/models/Milestone"
 import {CommentIndexes, IComment} from "common/models/Comment"
+import {INotification, NotificationIndexes} from "common/models/Notification"
 
 const log = getLogger(__filename)
 
 class ObjectDatabase extends Dexie {
+
+  get notifications(): Dexie.Table<INotification<any>, string> {
+    return this.table("notifications")
+  }
 
 	get issues(): Dexie.Table<IIssue, number> {
 		return this.table("issues")
@@ -62,7 +67,7 @@ class ObjectDatabase extends Dexie {
     //   milestones: MilestoneIndexes.v1
 		// })
 
-    this.version(3).stores({
+    this.version(4).stores({
       issues: IssueIndexes.v1,
       issueEvents: IssueEventIndexes.v1,
       labels: LabelIndexes.v1,
@@ -71,7 +76,8 @@ class ObjectDatabase extends Dexie {
       orgs: OrgIndexes.v1,
       comments: CommentIndexes.v1,
       milestones: MilestoneIndexes.v1,
-      collaborators: CollaboratorIndexes.v1
+      collaborators: CollaboratorIndexes.v1,
+      notifications: NotificationIndexes.v1
     })
 
 		log.info("Start database")

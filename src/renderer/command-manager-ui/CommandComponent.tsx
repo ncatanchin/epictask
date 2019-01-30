@@ -13,6 +13,7 @@ import {
   ICommandManagerOptions
 } from "common/command-manager"
 import getLogger from "common/log/Logger"
+import {isHTMLElement} from "common/UIUtil"
 
 const
 	log = getLogger(__filename)
@@ -32,21 +33,24 @@ export type CommandManagerRefs = {
 
 }
 
-function checkFocused(elementRef:React.RefObject<HTMLElement>):boolean {
-  const e = elementRef && elementRef.current
+function checkFocused(elementRef:React.RefObject<HTMLElement> | HTMLElement):boolean {
+  const e = isHTMLElement(elementRef) ? elementRef : elementRef.current
   if (!e)
     return false
 
   return getCommandManager().isFocused(e)
 }
 
-export function useFocused(elementRef:React.RefObject<HTMLElement>):boolean {
+export function useFocused(elementRef:React.RefObject<HTMLElement> | HTMLElement):boolean {
   const
-    [focused,setFocused] = useState(() => checkFocused(elementRef)),
+    element = !elementRef ? null : isHTMLElement(elementRef) ? elementRef : elementRef.current,
+    [focused,setFocused] = useState(() => !element ? false : checkFocused(element)),
     onFocusChanged = useCallback(() => {
-      if (!elementRef.current) return
-      setFocused(checkFocused(elementRef))
-    },[elementRef,elementRef.current])
+      const focused = !element ? false : checkFocused(element)
+      log.info("Updating focus ",focused," of ",element)
+      if (!element) return
+      setFocused(focused)
+    },[element,setFocused])
 
   useEffect(() => {
     const handler = onFocusChanged
@@ -54,7 +58,7 @@ export function useFocused(elementRef:React.RefObject<HTMLElement>):boolean {
     return () => {
       getCommandManager().removeListener(CommandManagerEvent.FocusChanged, handler)
     }
-  },[onFocusChanged])
+  },[element,onFocusChanged])
 
   return focused
 }

@@ -92,6 +92,10 @@ export function formatTimestamp(timestamp:number):string {
 	return moment(timestamp).format("YYYY-MM-DDTHH:mm:ssZ")
 }
 
+export function formatHeaderTimestamp(timestamp:number):string {
+  return (moment(timestamp) as any).tz("GMT").format("ddd, D MMM YYYY HH:mm:ss z")
+}
+
 Object.assign(global, {
 	getGithubAPI: getAPI
 })

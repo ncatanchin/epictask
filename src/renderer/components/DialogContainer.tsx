@@ -30,7 +30,7 @@ import DialogActions from "@material-ui/core/DialogActions/DialogActions"
 import Button from "@material-ui/core/Button/Button"
 import {Run} from "common/util/fn"
 import {useCommandManager} from "renderer/command-manager-ui"
-import CommandContainerIds from "renderer/CommandContainers"
+import CommonElementIds from "renderer/CommonElements"
 import Slide from "@material-ui/core/Slide/Slide"
 import {darken} from "@material-ui/core/styles/colorManipulator"
 import classNames from "classnames"
@@ -185,7 +185,7 @@ export default StyledComponent<P, SP>(baseStyles, selectors, {
     content = useMemo(() => dialog && toDialogElement(dialog, dialogProps, dialog.content), changeSet),
     actions = useMemo(() => dialog && toDialogElement(dialog, dialogProps, dialog.actions), changeSet),
     title = useMemo(() => dialog && toDialogElement(dialog, dialogProps, dialog.title), changeSet),
-    id = CommandContainerIds.Dialog,
+    id = CommonElementIds.Dialog,
     containerRef = useRef<any>(null),
     {props: commandManagerProps} = useCommandManager(
       id,

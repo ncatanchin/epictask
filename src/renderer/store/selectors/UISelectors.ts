@@ -38,9 +38,7 @@ export function makeSearchChipsSelector<
         return []
 
 
-      const chips = provider.hydrate(searches[id])
-      log.info("Searches",searches,"data",searches[id],"chips", chips)
-      return chips
+      return provider.hydrate(searches[id])
     }
 
   )
@@ -63,12 +61,11 @@ export function makeSearchDatasetSelector<
     searchChipSelector,
     (state:IRootRendererState) => state.DataState[dataSetName] as any,
     (searchChips: Array<ISearchChip>, dataSet:IDataSet<T>):IDataSet<T> => {
-      if (!searchChips || !searchChips.length)
-        return (dataSet || makeDataSet()) as IDataSet<T>
+      // if (!searchChips || !searchChips.length)
+      //   return (dataSet || makeDataSet()) as IDataSet<T>
 
 
       const finalItems = provider.filter(searchChips,dataSet.data)
-      log.info("Filtering",searchChips,"finalItems",finalItems)
       return makeDataSet(finalItems) as IDataSet<T>
 
     }

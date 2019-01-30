@@ -9,7 +9,7 @@ import {
 } from "./Search"
 
 import {flatten} from "lodash"
-import {IIssue} from "common/models/Issue"
+import {IIssue, IssueState} from "common/models/Issue"
 import {ILabel} from "common/models/Label"
 import {ICollaborator} from "common/models/Repo"
 import {getValue} from "typeguard"
@@ -19,9 +19,11 @@ import getLogger from "common/log/Logger"
 
 const log = getLogger(__filename)
 
-export type IssueSearchChip<PK = string,V = string> = ISearchChip<IIssue,PK,V>
+export type IssueSearchChip<PK = string,V = any> = ISearchChip<IIssue,PK,V>
 
-export class IssueStateChip implements IssueSearchChip<string,string[]> {
+export type IssueStateValue = Array<IssueState | "all">
+
+export class IssueStateChip implements IssueSearchChip<string,IssueStateValue> {
 
   readonly type = this.constructor.name
 
@@ -34,9 +36,9 @@ export class IssueStateChip implements IssueSearchChip<string,string[]> {
   }
 
   constructor(
-    public filter:ISearchFilter<IIssue, string, string[]>,
+    public filter:ISearchFilter<IIssue, string, IssueStateValue>,
     public key:"state",
-    public value:string[]
+    public value:IssueStateValue
   ) {
 
   }
@@ -156,17 +158,17 @@ export class IssueMilestoneChip implements IssueSearchChip<string,IMilestone> {
   }
 }
 
-class IssueStateFilter implements ISearchFilter<IIssue, string, string[],any> {
+class IssueStateFilter implements ISearchFilter<IIssue, string, IssueStateValue,any> {
 
   supportedChips:Array<ISearchChipType> = [IssueStateChip]
 
   name:string = this.constructor.name
 
-  hydrate(data:ISearchChipData<string[]>):IssueStateChip {
+  hydrate(data:ISearchChipData<IssueStateValue>):IssueStateChip {
     return new IssueStateChip(this,"state",data.value)
   }
 
-  filter(chips:Array<ISearchChip<IIssue, string, string[]>>, results:IIssue[]):IIssue[] {
+  filter(chips:Array<ISearchChip<IIssue, string, IssueStateValue>>, results:IIssue[]):IIssue[] {
     const stateChips = chips.filter(chip => chip instanceof IssueStateChip)
 
     if (stateChips.length) {
@@ -178,7 +180,7 @@ class IssueStateFilter implements ISearchFilter<IIssue, string, string[],any> {
 
   searchChips(text:string):Array<IssueStateChip> {
     return flatten([
-      ["all","open","closed"]
+      (["all","open","closed"] as IssueStateValue)
         .filter(state => state.toLowerCase().includes(text.toLowerCase()))
         .map(state =>
           new IssueStateChip(this as any, 'state', state === 'all' ? ["closed","open"] : [state])
@@ -317,7 +319,7 @@ const issueSearchProvider = new SearchProvider<DB,"issues",IIssue,string>(db,'is
   new TextFilter(['body','title']),
   new OrderByFilter(['created_at','updated_at','title','body'],'created_at'),
   new SortFilter()
-])
+], new IssueStateChip(new IssueStateFilter(),"state",["open"]))
 
 
 export default issueSearchProvider

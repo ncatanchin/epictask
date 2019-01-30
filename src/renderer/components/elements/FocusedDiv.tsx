@@ -10,8 +10,9 @@ import {
 import {createStructuredSelector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
-import {useRef} from "react"
+import {useCallback, useRef, useState} from "react"
 import {useFocused} from "renderer/command-manager-ui"
+import {guard} from "typeguard"
 
 const log = getLogger(__filename)
 
@@ -37,18 +38,26 @@ function baseStyles(theme: Theme): StyleDeclaration {
 
 
 interface P extends IThemedProperties {
-  innerRef?: React.RefObject<HTMLDivElement>
+  ref?: React.RefObject<HTMLElement>
 }
 
 
-export default StyledComponent<P>(baseStyles)(function FocusedDiv(props: P): React.ReactElement<P> {
+export default StyledComponent<P>(baseStyles)(React.forwardRef((props: P,ref:React.RefObject<any>): React.ReactElement<P> => {
   const
-    {classes,children,...other} = props,
+    {classes,children,onFocus:onParentFocus,onBlur:onParentBlur,className,...other} = props,
     containerRef = useRef<HTMLDivElement | null>(null),
-    focused = useFocused(containerRef)
+    [focused, setFocused] = useState(false),
+    onFocus = useCallback((event:React.FocusEvent) => {
+      setFocused(true)
+      guard(() => onParentFocus(event))
+    },[onParentFocus,focused, setFocused]),
+    onBlur = useCallback((event:React.FocusEvent) => {
+      setFocused(false)
+      guard(() => onParentBlur(event))
+    },[onParentBlur,focused, setFocused])
 
-  return <div ref={containerRef} className={classes.root} {...other}>
+  return <div ref={ref as any} onFocus={onFocus} onBlur={onBlur} className={mergeClasses(classes.root,className)} {...other}>
     {children}
     <div className={mergeClasses(classes.focused, focused && "active")}/>
   </div>
-})
+}))
