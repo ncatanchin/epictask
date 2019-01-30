@@ -1,0 +1,36 @@
+
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": ["dom", "es2017", "es2018" ],
+      "module": "commonjs",
+    "moduleResolution": "node",
+    "declaration": false,
+    "emitDecoratorMetadata": true,
+    "jsx": "react",
+    "experimentalDecorators": true,
+    "preserveConstEnums": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "pretty": true,
+    "skipLibCheck": true,
+    "baseUrl": "./src",
+    "outDir": "./dist/out",
+    "paths": {
+      "common/*": [ "./common/*" ],
+      "renderer/*": [ "./renderer/*" ],
+      "main/*": [ "./main/*" ],
+      "*": [
+        "*"
+      ]
+    }
+  },
+  "exclude": [
+    "data",
+    "tmp",
+    "dist",
+    "node_modules",
+    "node_modules/sugar/sugar-extended.d.ts",
+    "node_modules/sugar/sugar.d.ts"
+  ]
+}
