@@ -11,7 +11,7 @@ import {
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import MUITextField, {TextFieldProps} from "@material-ui/core/TextField/TextField"
 import {ClassNameMap} from "@material-ui/core/styles/withStyles"
-
+import * as _ from 'lodash'
 
 const
   log = getLogger(__filename)

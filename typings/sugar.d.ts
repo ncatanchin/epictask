@@ -1,6 +1,7 @@
 // Type definitions for Sugar v2.0.6
-// Project: https://sugarjs.com/
+// Project: https://sugarjsLocal.com/
 // Definitions by: Andrew Plummer <plummer.andrew@gmail.com>
+
 
 declare namespace sugarjsLocal {
 
@@ -56,12 +57,12 @@ declare namespace sugarjsLocal {
 
   interface Range {
     clamp<T>(el: T): T;
-    clone(): sugarjs.Range;
+    clone(): sugarjsLocal.Range;
     contains<T>(el: T): boolean;
     days(): number;
-    every<T>(amount: string|number, everyFn?: (el: T, i: number, r: sugarjs.Range) => void): T[];
+    every<T>(amount: string|number, everyFn?: (el: T, i: number, r: sugarjsLocal.Range) => void): T[];
     hours(): number;
-    intersect(range: sugarjs.Range): sugarjs.Range;
+    intersect(range: sugarjsLocal.Range): sugarjsLocal.Range;
     isValid(): boolean;
     milliseconds(): number;
     minutes(): number;
@@ -70,7 +71,7 @@ declare namespace sugarjsLocal {
     span(): number;
     toArray<T>(): T[];
     toString(): string;
-    union(range: sugarjs.Range): sugarjs.Range;
+    union(range: sugarjsLocal.Range): sugarjsLocal.Range;
     weeks(): number;
     years(): number;
   }

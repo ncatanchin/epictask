@@ -4,7 +4,8 @@ const
   envName = getValue(() => process.env.MAPPER_ENV,
     getValue(() => process.env.USER, "prod")
   ).substring(0, 10),
-  isDev = nodeEnv !== 'production' && process.env.PACKAGE !== 'true',
+  isDev = nodeEnv !== 'production',
+  devToolsOpen = false,//isDev,
   envStartupBuild = getValue(() => process.env.MAPPER_BUILD, "default"),
   Path = require('path'),
   Fs = require('fs'),
@@ -13,12 +14,15 @@ const
   pkgJson = JSON.parse(Fs.readFileSync(Path.resolve(baseDir, 'package.json'), 'utf-8')),
   isProd = envName === 'prod'
 
-module.exports = {
+module.exports = isProcessMain => ({
   isDev,
   __DEV__: isDev,
   DEBUG: isDev,
+  'process.env.isMainProcess': isProcessMain,
   VERSION: JSON.stringify(pkgJson.version),
   MAPPER_ENV: JSON.stringify(envName),
+
+  'process.env.devToolsOpen': devToolsOpen,
   'process.env.MAPPER_ENV': JSON.stringify(envName),
   'process.env.__DEV__': isDev,
   'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
@@ -29,4 +33,4 @@ module.exports = {
   'process.env.PUSHER_KEY': JSON.stringify(isProd ? '4e9865dd5382debb146f' : 'feb85881f22a0444fc7d'),
   'process.env.PUSHER_CLUSTER': JSON.stringify('mt1'),
   MAPPER_BUILD: JSON.stringify(envStartupBuild)
-}
+})

@@ -17,7 +17,17 @@ Sugar.extend()
 const log = getLogger(__filename)
 
 
+log.info("Starting")
 
+process.on('uncaughtException', function (err) {
+  console.log("Uncaught", err);
+});
+
+// const jsdom = require("jsdom")
+// const { JSDOM } = jsdom
+// const bWindow = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`).window
+// Object.assign(global,{window:bWindow})
+//Object.assign(global,{window:{webpackJsonp: []}})
 
 // DISABLE WEB-SECURITY
 app.commandLine.appendSwitch('disable-web-security')
@@ -26,7 +36,7 @@ async function checkAuthenticated():Promise<void> {
 	log.info(`Checking authentication: ${Auth.isAuthenticated()}`)
 	if (Auth.isAuthenticated()) {
 		log.info("Showing main")
-		;(await createMainWindow()).show()
+		;(await createMainWindow())
 	} else {
 		Auth.authenticate()
 	}
@@ -45,25 +55,27 @@ app.on('window-all-closed', () => {
 app.on('activate', async () => {
 	// On macOS it is common to re-create a window
 	// even after all windows have been closed
-	await createMainWindow()
+	await checkAuthenticated()
 })
 
 // Create main BrowserWindow when electron is ready
 app.on('ready', async () => {
 	createMenu()
+  registerShortcuts()
+  app.on("browser-window-focus", registerShortcuts)
+  app.on("browser-window-blur", unregisterShortcuts)
+
 	require('electron-context-menu')()
 
 	// BOOTSTRAP
-	await (await import("./Bootstrap")).default
+	await (require("./Bootstrap")).default
 
 	Auth.register()
 
 	await createMainWindow()
 	await checkAuthenticated()
 
-	registerShortcuts()
-	app.on("browser-window-focus", registerShortcuts)
-	app.on("browser-window-blur", unregisterShortcuts)
+
 })
 
 async function getZoomFactor():Promise<number> {
@@ -77,6 +89,12 @@ const Shortcuts = [
 			BrowserWindow.getAllWindows().forEach(it => it.webContents.toggleDevTools())
 		}
 	},
+  {
+    accelerator: 'CommandOrControl+Shift+I',
+    handler() {
+      BrowserWindow.getAllWindows().forEach(it => it.webContents.toggleDevTools())
+    }
+  },
 	{
 		accelerator: 'F7',
 		handler() {

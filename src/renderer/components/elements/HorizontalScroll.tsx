@@ -13,6 +13,7 @@ import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {CSSProperties, useEffect, useRef} from "react"
 import * as CSS from 'csstype'
 import {LineWidth} from "csstype"
+import * as $ from 'jquery'
 
 const log = getLogger(__filename)
 

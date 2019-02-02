@@ -2,11 +2,11 @@ import {loadAndInitStore} from "common/store/AppStore"
 
 async function init():Promise<void> {
   await loadAndInitStore()
-  await (await import("common/watchers")).default
-  
+  await require('common/watchers/StorePersistWatcher').default
+
   const
-  	{getCommandManager} = await import("common/command-manager"),
-  	{ElectronMainManagerProvider}= await import("common/command-manager/CommandElectronMenuManager")
+  	{getCommandManager} = require("common/command-manager"),
+  	{ElectronMainManagerProvider}= require("common/command-manager/CommandElectronMenuManager")
 
   getCommandManager().setMenuManagerProvider(ElectronMainManagerProvider)
 }

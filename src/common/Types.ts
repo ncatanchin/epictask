@@ -1,3 +1,5 @@
+import * as _ from 'lodash'
+
 export type StringMap<V> = { [key:string]:V }
 
 export type StringOrNumber = string | number
@@ -60,7 +62,7 @@ export function updateDataSet<T = any>(newData:Array<T>, oldDataSet:IDataSet<T> 
 
 export type PromiseResolver<T = any,TResult1 = T> = ((value: T) => TResult1 | PromiseLike<TResult1>)
 
-export type DataType = "issues" | "repos" | "orgs" | "users"
+export type DataType = "notifications" | "issueEvents" | "issues" | "repos" | "orgs" | "users"
 
 export interface IDataSyncRecord {
 	id: number

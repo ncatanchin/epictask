@@ -9,7 +9,7 @@ import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import * as highlight from "highlight.js"
 //import 'highlight.js/styles/github.css'
 import {useEffect, useRef} from "react"
-
+import * as _ from 'lodash'
 const log = getLogger(__filename)
 
 

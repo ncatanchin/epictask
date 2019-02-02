@@ -14,6 +14,9 @@
     "baseUrl": "./src",
     "outDir": "./dist/out",
     "paths": {
+      "common/*": [ "./common/*" ],
+      "renderer/*": [ "./renderer/*" ],
+      "main/*": [ "./main/*" ],
       "*": [
         "*"
       ]

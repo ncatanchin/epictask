@@ -18,6 +18,20 @@ import DialogContainer from "renderer/components/DialogContainer"
 import StatusBar from "renderer/components/elements/StatusBar"
 import Notifications from "renderer/components/elements/Notifications"
 import BlockingWorkProgress from "renderer/components/elements/BlockingWorkProgress"
+import {isMain} from "common/Process"
+import {getHot} from "common/HotUtil"
+
+const history = isMain() ? null : getHot(module, 'history', require('history/createHashHistory').default) as any
+
+/**
+ * Get the history setup from npm history
+ */
+export function getRouterHistory():any {
+  // import createHistory from 'history/createHashHistory'
+  // import {History,LocationState} from "history"
+  // history:History<LocationState> = isMain() ? null : getHot(module, 'history', createHistory) as any,
+  return history
+}
 
 function baseStyles(): StyleDeclaration {
   return {

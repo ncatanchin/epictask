@@ -1,8 +1,8 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
-import {IThemedProperties, StyleDeclaration, withStatefulStyles} from "renderer/styles/ThemedStyles"
-import {createStructuredSelector} from "reselect"
-import {connect} from "common/util/ReduxConnect"
+import {IThemedProperties, StyleDeclaration} from "renderer/styles/ThemedStyles"
+
+
 import {IRepo} from "common/models/Repo"
 import AutoCompleteSelect from "renderer/components/elements/AutoCompleteSelect"
 import {selectedOrgReposSelector} from "common/store/selectors/DataSelectors"

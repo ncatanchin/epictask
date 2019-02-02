@@ -8,7 +8,7 @@ import db from "renderer/db/ObjectDatabase"
 import {IIssue} from "common/models/Issue"
 import issueSearchProvider from "renderer/search/SearchIssues"
 import getLogger from "common/log/Logger"
-
+import * as _ from 'lodash'
 
 const log = getLogger(__filename)
 

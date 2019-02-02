@@ -5,12 +5,15 @@ const log = getLogger(__filename)
 
 export async function init():Promise<void> {
 	log.info("Init DB")
-	const db = (await import("../db/ObjectDatabase")).default
+	const db = (require("../db/ObjectDatabase")).default
 	await db.open()
 	await navigator.storage.persist()
-	
-	;(await (await import("../db/OrgObjectManager")).default()).start()
-	;(await (await import("../db/RepoObjectManager")).default()).start()
-	;(await (await import("../db/IssueObjectManager")).default()).start()
-	
+
+	;(await (require("../db/OrgObjectManager")).default()).start()
+	;(await (require("../db/RepoObjectManager")).default()).start()
+	;(await (require("../db/IssueObjectManager")).default()).start()
+  ;(await (require("../db/OrgObjectManager")).default()).start()
+
+  ;(await (require("../db/NotificationObjectManager")).default()).start()
+
 }

@@ -39,7 +39,7 @@ import {
 } from "renderer/components/elements/IssueEventActivities"
 import {useController} from "renderer/controllers/Controller"
 import IssueViewController from "renderer/controllers/IssueViewController"
-
+import * as _ from 'lodash'
 const
   Octicon = require("@githubprimer/octicons-react").default,
   log = getLogger(__filename)

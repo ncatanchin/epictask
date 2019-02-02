@@ -9,7 +9,6 @@ import {IIssue, IIssueEventData} from "common/models/Issue"
 import {ILabel} from "common/models/Label"
 import {IMilestone} from "common/models/Milestone"
 import {IComment} from "common/models/Comment"
-import moment from "moment"
 
 const log = getLogger(__filename)
 
@@ -37,6 +36,13 @@ export class DataActionFactory extends ActionFactory<DataState,ActionMessage<Dat
 			orgs: makeDataSet([...orgs])
 		})
 	}
+
+  @ActionReducer()
+  setData<T extends any = any>(type:DataType, data:Array<T>) {
+    return (state:DataState) => patchState(state,{
+      [type]: makeDataSet([...data])
+    })
+  }
 
 	@ActionReducer()
 	setRepoObjects(issues:Array<IIssue>, labels:Array<ILabel>, milestones: Array<IMilestone>, collaborators: Array<ICollaborator>) {

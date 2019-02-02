@@ -25,6 +25,7 @@ import {useCallback, useEffect, useRef, useState} from "react"
 import PopoverSelect from "renderer/components/elements/PopoverSelect"
 import {IIssue} from "common/models/Issue"
 import {Person as PersonIcon} from "@githubprimer/octicons-react"
+import * as _ from 'lodash'
 
 const
   Octicon = require("@githubprimer/octicons-react").default,

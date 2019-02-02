@@ -52,6 +52,7 @@ class Control extends React.Component<any> {
       innerRef,
       options,
       theme,
+      menuIsOpen,
       ...props
     } = this.props
 
@@ -173,6 +174,10 @@ interface InnerP extends IThemedProperties<AutoCompleteSelectClasses> {
 }
 
 interface P<T = any> extends SelectProps<T>, StyledComponentProps<AutoCompleteSelectClasses> {
+  id?:string
+  theme?:any
+  onMenuOpen?:any
+  onMenuClose?:any
   commandManagerProps?: CommandManagerProps
   selectRef?: React.Ref<ReactSelect<T>> | React.RefObject<ReactSelect<T>>
   viewportMode?: ViewportMode

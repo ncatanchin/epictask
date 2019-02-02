@@ -12,6 +12,15 @@ const
 	WindowMinWidth = 1000,
 	WindowMinHeight = 650
 
+function updateVisibility():void {
+  if (!mainWindow) return
+
+	if (isAuthenticated())
+    mainWindow.show()
+  else
+    mainWindow.hide()
+}
+
 
 async function installDevTools():Promise<void> {
 	if (!isDev) return
@@ -21,7 +30,7 @@ async function installDevTools():Promise<void> {
 		REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS
 	} = require('electron-devtools-installer')
 
-	await Promise.all([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS].map((key:string) => {
+	await Promise.all([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS,"alploljligeomonipppgaahpkenfnfkn"].map((key:string) => {
 		installExtension(key).then((name) => {
 			log.info(`Added Extension:  ${name}`)
 		}).catch((err) => console.log('An error occurred: ', err))
@@ -29,8 +38,10 @@ async function installDevTools():Promise<void> {
 }
 
 export async function createMainWindow():Promise<BrowserWindow> {
-	if (mainWindow)
+	if (mainWindow) {
+    updateVisibility()
 		return mainWindow
+  }
 
 	const
 		wdsPort = process.env.ELECTRON_WEBPACK_WDS_PORT,
@@ -54,10 +65,14 @@ export async function createMainWindow():Promise<BrowserWindow> {
 		... _.pick(winState, 'x', 'y', 'width', 'height'),
 	})
 
+  mainWindow.hide()
+
 	// if the render process crashes, reload the window
 	mainWindow.webContents.on('crashed', (event, killed) => {
 		console.error("CRASH", event, killed)
 	})
+
+
 
 	winState.manage(mainWindow)
 
@@ -65,26 +80,27 @@ export async function createMainWindow():Promise<BrowserWindow> {
 	await installDevTools()
 
 
-	mainWindow.on("close", () => {
-		mainWindow = null
-	})
+	// mainWindow.on("close", () => {
+	// 	mainWindow = null
+	// })
 
 	mainWindow.on("ready-to-show", () => {
 		log.info("Ready to show")
 		mainWindow.setTitle("Epictask")
 
-		if (isAuthenticated())
-			mainWindow.show()
-		else
-			mainWindow.hide()
+
+
+		updateVisibility()
 	})
 
-	if (isDev) {
-		mainWindow.webContents.openDevTools()
-	}
+  if (process.env.devToolsOpen) {
+    mainWindow.webContents.openDevTools()
+  }
 
-	log.info("Loading URL and returning")
+	log.info("Loading URL and returning",url)
 	mainWindow.loadURL(url)
+
+
 
 	return mainWindow
 }

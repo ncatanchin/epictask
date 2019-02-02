@@ -7,8 +7,8 @@ import * as Fs from 'fs'
 import getLogger from "common/log/Logger"
 import {getUserDataDir} from "common/Paths"
 import {IActionFactoryBaseConstructor} from "common/store/actions/ActionFactoryBase"
-import {DataState} from "common/store/state/DataState"
-import {DataActionFactory} from "common/store/actions/DataActionFactory"
+// import {DataState} from "common/store/state/DataState"
+// import {DataActionFactory} from "common/store/actions/DataActionFactory"
 import {isMain} from "common/Process"
 import * as Electron from "electron"
 
@@ -26,10 +26,10 @@ if (isMain() && !Fs.existsSync(dir))
  * @param stateConstructor
  */
 function setupMainLeafPersistence<S extends State<string>>(factoryConstructor:IActionFactoryBaseConstructor<S>, stateConstructor:IStateConstructor<string,S>):void {
-	
+
 	// LEAF FILENAME
 	const filename = `${dir}/${stateConstructor.Key}.json`
-	
+
 	// LOAD THE STATE
 	if (Fs.existsSync(filename)) {
 		try {
@@ -40,10 +40,10 @@ function setupMainLeafPersistence<S extends State<string>>(factoryConstructor:IA
 			log.error(`Unable to hydrate from: ${filename}`, err)
 		}
 	}
-	
+
 	// SAVING FLAG
 	let saving = false
-	
+
 	/**
 	 * Save the state
 	 *
@@ -55,7 +55,7 @@ function setupMainLeafPersistence<S extends State<string>>(factoryConstructor:IA
 			const
 				stateJS = isFunction(state.toJS) ? state.toJS() : state,
 				persistState = JSON.stringify(stateJS)
-			
+
 			log.info(`Saving state: ${filename}`)
 			await Fs.promises.writeFile(filename, persistState, {encoding: 'utf-8'})
 		} catch (err) {
@@ -64,21 +64,21 @@ function setupMainLeafPersistence<S extends State<string>>(factoryConstructor:IA
 			saving = false
 		}
 	}
-	
+
 	// REFERENCE THE SAVE STATE FUNC
 	let scheduleSaveState: (state:S) => void
-	
+
 	// eslint-disable-next-line
 	scheduleSaveState = _.debounce((state:S) => {
 		if (saving) {
 			scheduleSaveState(getStoreState()[stateConstructor.Key])
 			return
 		}
-		
+
 		saveState(state)
 			.catch(err => log.error("Unable to save state", err))
 	}, 500)
-	
+
 	// ATTACH OBSERVER
 	getStore().observe(stateConstructor.Key,scheduleSaveState)
 }
@@ -101,7 +101,7 @@ function setupRendererLeafPersistence<S extends State<string>>(
 
 // SETUP PERSISTENCE FOR ALL NODES
 async function init():Promise<void> {
-	if (isMain()) {
+	if (process.env.isMainProcess) {
 		setupMainLeafPersistence(AppActionFactory, AppState)
 		//setupMainLeafPersistence(DataActionFactory, DataState)
 		setupIPC()

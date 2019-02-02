@@ -12,20 +12,20 @@ import {isMain} from "common/Process"
 const log = getLogger(__filename)
 
 async function loadUser(config:IConfig):Promise<void> {
-	if (isMain()) {
+	//if (process.env.isMainProcess) {
 		log.info("Loading user with config", config)
 		try {
 			const
 				gh = getAPI(config),
 				user = (await gh.users.getAuthenticated({})).data as IUser
-			
+
 			log.info("Got user", user)
 			const appActions = new AppActionFactory()
 			await appActions.setUserAndConfig(user, config)
 		} catch (err) {
 			log.error("Unable to load user", err)
 		}
-	}
+	//}
 }
 
 EventHub.on("ConfigChanged",loadUser)
@@ -39,7 +39,7 @@ async function init():Promise<void> {
 				await delay(500)
 				continue
 			}
-			
+
 			await loadUser(config)
 			await delay(10)
 		}

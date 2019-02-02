@@ -1,7 +1,7 @@
 
 async function init():Promise<void> {
-	await (await import("./DatabaseInit")).init()
-	await (await import("./CommandManagerInit")).init()
+	await (require("./DatabaseInit")).init()
+	await (require("./CommandManagerInit")).init()
 }
 
 export default init()

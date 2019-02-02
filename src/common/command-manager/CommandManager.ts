@@ -1,8 +1,6 @@
-import * as React from 'react'
 import * as assert from 'assert'
 import * as Electron from 'electron'
 import {EnumEventEmitter} from 'type-enum-events'
-import * as _ from 'lodash'
 import {
   CommandContainerElement,
   CommandExecutor,
@@ -22,15 +20,17 @@ import {getValue, guard, isFunction, isNil, isNumber, isString} from "typeguard"
 import getLogger from "common/log/Logger"
 import {acceptHot, getHot, setDataOnHotDispose} from "common/HotUtil"
 import {isMain, isRenderer} from "common/Process"
-import {getZIndex, isHTMLElement, isReactComponent} from "common/UIUtil"
+
 import Commands from "common/command-manager/CommandStore"
-import * as ReactDOM from "react-dom"
+//import * as React from 'react'
+//import * as ReactDOM from "react-dom"
 import {cloneObjectShallow} from "common/ObjectUtil"
 import {getWindowId} from "common/ElectronUtil"
 import {StringMap} from "common/Types"
 import {shortId} from "common/IdUtil"
 import Scheduler, {ITimerRegistration} from "common/Scheduler"
-
+//import * as $ from 'jquery'
+import * as _ from 'lodash'
 
 const
   log = getLogger(__filename),
@@ -182,7 +182,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
   private windowListeners
 
   /**
-   * Browser window listeners for electronm
+   * Browser window listeners for electron
    */
   private bodyListeners
 
@@ -272,7 +272,10 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
   }
 
   isFocused(idOrElement: string | HTMLElement) {
+    if (isMain()) return false
+
     const
+      {getZIndex, isHTMLElement,isReactComponent} = require("common/UIUtil"),
       element = isString(idOrElement) ? document.querySelector(`#${idOrElement}`) : idOrElement,
       id = isString(idOrElement) ? idOrElement : (element.getAttribute("id") || "none"),
       focusedContainers = this.focusedContainers()
@@ -304,7 +307,12 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
   }
 
   private static getContainerElement({id, element, container}: ICommandContainerRegistration) {
-    const e = document.querySelector(`#${id}`)
+    if (isMain()) return null
+
+    const
+      {getZIndex, isHTMLElement,isReactComponent} = require("common/UIUtil"),
+      ReactDOM = require("react-dom"),
+      e = document.querySelector(`#${id}`)
     return e || (element instanceof HTMLElement ? element : (isReactComponent(element) ? ReactDOM.findDOMNode(element) : element) as HTMLElement)
   }
 
@@ -371,6 +379,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 
       // LOG THE FOCUS IDS
       if (DEBUG && isRenderer()) {
+        const $ = require('jquery')
         $("#focusedContainers").remove()
         $(`<div id="focusedContainers">${
           focusedContainers
@@ -397,7 +406,11 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    * All Focused Containers
    */
   focusedContainers(): ICommandContainerRegistration[] {
+    if (isMain()) return []
+
+    const $ = require('jquery')
     const
+      {getZIndex, isHTMLElement,isReactComponent} = require("common/UIUtil"),
       allContainers = Object.values(this.containers) as Array<ICommandContainerRegistration>
 
     let
@@ -761,6 +774,12 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    * @return {ICommandContainerRegistration}
    */
   private getContainerRegistration(id: string, container: CommandContainerElement, available: boolean, options: Partial<ICommandManagerOptions>): ICommandContainerRegistration | null {
+    if (isMain()) return null
+
+    const
+      {getZIndex, isHTMLElement,isReactComponent} = require("common/UIUtil"),
+      ReactDOM = require("react-dom")
+
     let
       reg = this.containers[id]
 
@@ -1361,6 +1380,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    * @param skipEvent
    */
   focusOnContainer(containerId: string, skipEvent = false) {
+    if (isMain()) return
     const
       containerReg = this.containers[containerId]
 
@@ -1368,7 +1388,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
       log.warn(`No container found for ${containerId}`)
       return
     }
-
+    const $ = require('jquery')
     const
       doFocus = (): void => {
         const
@@ -1483,8 +1503,13 @@ export class CommandContainerBuilder {
    */
   constructor(
     public container: CommandContainerElement,
-    public containerId: string = getValue(() => (container as any).id || $(container).attr("id"))
+    public containerId: string | null = null
   ) {
+
+    if (!containerId && !isMain()) {
+      this.containerId = containerId = getValue(() => (container as any).id || $(container).attr("id"))
+    }
+
     this.commands = [CommandContainerBuilder.createCommand(
       container,
       containerId,

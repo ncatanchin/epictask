@@ -1,17 +1,18 @@
 /* eslint-disable */
-import createHistory from 'history/createHashHistory'
+
 import * as _ from "lodash"
 import {applyMiddleware, compose, Middleware, Store as ReduxStore, StoreEnhancer} from "redux"
 import thunkMiddleware from "redux-thunk"
 import {ILeafReducer, ObservableStore, setStoreProvider, State} from "typedux"
 import {getHot, setDataOnHotDispose} from "common/HotUtil"
-import addDevMiddleware from "./AppStoreDevConfigs"
+
 import getLogger from 'common/log/Logger'
 import {StringMap} from "common/Types"
 import {AppState} from "./state/AppState"
 import {DataState} from "./state/DataState"
-import {History,LocationState} from "history"
-import {isMain, isRenderer} from "common/Process"
+
+//import {isMain, isRenderer} from "common/Process"
+//import createHistory from "history/createHashHistory"
 
 
 
@@ -21,16 +22,16 @@ let store:ObservableStore<any> = getHot(module, "store",null) as any
 
 const
 	log = getLogger(__filename),
-	history:History<LocationState> = isMain() ? null : getHot(module, 'history', createHistory) as any,
-	middleware = getHot(module, "middleware", createMiddleWare) as any
+  middleware = getHot(module, "middleware", createMiddleWare) as any
+  //history = process.env.isMainProcess ? null : getHot(module, 'history', require('history/createHashHistory').default) as any
 
 let hmrReady = false
 
 function createMiddleWare():Middleware[] {
 	const middleware = [thunkMiddleware]
-	if (isRenderer()) {
-		const { routerMiddleware} = require('react-router-redux')
-		middleware.push(routerMiddleware(history))
+	if (!process.env.isMainProcess) {
+		// const { routerMiddleware} = require('react-router-redux')
+		// middleware.push(routerMiddleware(history))
 	}
 	return middleware
 }
@@ -44,7 +45,7 @@ function hmrReducerSetup():void {
 		hmrReady = true
 		// When ./Reducers is updated, fire off updateReducers
 		const stateModules = ["./state/AppState","./state/DataState"]
-		if (isRenderer()) {
+		if (!process.env.isMainProcess) {
 			stateModules.push("renderer/store/state/UIState")
 		}
 		module.hot.accept(stateModules, updateReducers)
@@ -65,13 +66,11 @@ export async function loadReducers():Promise<Array<ILeafReducer<any,any>>> {
 		...ObservableStore.makeSimpleReducers(new AppState(), new DataState())
 	]
 
-	if (isRenderer()) {
+	if (!process.env.isMainProcess) {
 		reducers.unshift(require('react-router-redux').routerReducer)
 
 		const
-			rendererStates = await Promise.all([
-        import("renderer/store/state/UIState")
-      ]),
+			rendererStates = [require("renderer/store/state/UIState")],
 			rendererReducers = ObservableStore.makeSimpleReducers(
 				...rendererStates.map(mod => new (mod.default)())
 			)
@@ -109,15 +108,20 @@ export function getStoreState():StringMap<any> & IRootState {
 
 async function initStore(devToolsMode:boolean = false):Promise<ObservableStore<IRootState>> {
 	const enhancers = [
-		applyMiddleware(...middleware),
-		await (isMain() ?
-				await import("./enhancers/MainEnhancer") :
-				await import("./enhancers/RendererEnhancer")
-		).default
+		applyMiddleware(...middleware)
 	]
 
+
+  if (process.env.isMainProcess) {
+  	enhancers.push(require("./enhancers/MainEnhancer").default)
+	} else {
+    enhancers.push(require("./enhancers/RendererEnhancer").default)
+    const addDevMiddleware = require("./AppStoreDevConfigs").default
+    addDevMiddleware(enhancers)
+	}
+
 	// Add redux as a dev tool in develop window
-	addDevMiddleware(enhancers)
+
 
 	const reducers = await loadReducers()
 	const newObservableStore:ObservableStore<any> = ObservableStore.createObservableStore(
@@ -154,12 +158,17 @@ export async function loadAndInitStore():Promise<ObservableStore<IRootState>> {
 	return await initStore(false)
 }
 
-/**
- * Get the history setup from npm history
- */
-export function getRouterHistory():History<LocationState> {
-	return history
-}
+// const history = isMain() ? null : getHot(module, 'history', require('history/createHashHistory').default) as any
+//
+// /**
+//  * Get the history setup from npm history
+//  */
+// export function getRouterHistory() {
+//   // import createHistory from 'history/createHashHistory'
+//   // import {History,LocationState} from "history"
+//   // history:History<LocationState> = isMain() ? null : getHot(module, 'history', createHistory) as any,
+// 	return history
+// }
 
 /**
  * Log an error when it occurs in the reducer
@@ -174,7 +183,7 @@ _.assign(global, {
 	getReduxStore,
 	getStore,
 	getStoreState,
-	getRouterHistory, // used by ConnectedRouter
+//	getRouterHistory, // used by ConnectedRouter
 })
 
 

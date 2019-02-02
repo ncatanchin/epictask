@@ -1,9 +1,8 @@
 import {ActionFactory, ActionMessage, ActionReducer, patchState} from "typedux"
-import {AppState, IIssueEdit} from "common/store/state/AppState"
+import {AppState} from "common/store/state/AppState"
 import {IConfig} from "common/config/Config"
 import {IActionFactoryBase} from "./ActionFactoryBase"
 import getLogger from "common/log/Logger"
-import {getAPI} from "renderer/net/GithubAPI"
 import {IUser} from "common/models/User"
 import {IRepo} from "common/models/Repo"
 import {IOrg} from "common/models/Org"
@@ -24,15 +23,7 @@ export class AppActionFactory extends ActionFactory<AppState, ActionMessage<AppS
     return AppState.Key
   }
 
-  @ActionReducer()
-  setIssuesSplitter(splitter: number | string) {
-    return (state: AppState) => patchState(state, {
-      issues: {
-        ...state.issues,
-        splitter
-      }
-    })
-  }
+
 
   setSelectedRepo(selectedRepo: IRepo) {
     this.setSelectedRepoId(selectedRepo ? selectedRepo.id : 0)

@@ -6,7 +6,7 @@ import {getValue} from "typeguard"
 import {DialogDefaults, IDialog} from "renderer/models/Dialog"
 import {getCommandManager} from "common/command-manager"
 import {ISearchChip} from "renderer/search/Search"
-
+import * as _ from 'lodash'
 
 const
   log = getLogger(__filename)
@@ -80,6 +80,24 @@ export class UIActionFactory extends ActionFactory<UIState, ActionMessage<UIStat
       patchState(state, {
         issueViewController: issueViewController ? issueViewController : null
       })
+  }
+
+  @ActionReducer()
+  setNotificationsOpen(notificationsOpen:boolean) {
+    return (state:UIState) =>
+      patchState(state, {
+        notificationsOpen
+      })
+  }
+
+  @ActionReducer()
+  setSplitter(name:string, size: number | string) {
+    return (state: UIState) => patchState(state, {
+      splitters: {
+        ...state.splitters,
+        [name]: size
+      }
+    })
   }
 
 }

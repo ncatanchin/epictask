@@ -6,6 +6,7 @@ import {IOrg} from "common/models/Org"
 import {IMilestone} from "common/models/Milestone"
 import {ILabel} from "common/models/Label"
 import {IComment} from "common/models/Comment"
+import {INotification} from "common/models/Notification"
 
 
 const DefaultIssueEventData = {
@@ -32,6 +33,7 @@ export class DataState implements State<string> {
   collaborators: IDataSet<ICollaborator> = makeDataSet()
   labels: IDataSet<ILabel> = makeDataSet()
   milestones: IDataSet<IMilestone> = makeDataSet()
+  notifications: IDataSet<INotification> = makeDataSet()
 
 	issueData: IIssueEventData = {...DefaultIssueEventData}
 

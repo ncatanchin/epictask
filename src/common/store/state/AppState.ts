@@ -34,11 +34,9 @@ export class AppState implements State<string> {
 
 	enabledRepoIds = Array<number>()
 
-	syncs:{[table:string]:IDataSyncStatus}
+	syncs:{[table:string]:IDataSyncStatus} = {}
 
-	issues = {
-		splitter: 400 as string|number
-	}
+
 
 	constructor(o:any = {}) {
 		Object.assign(this,o,{

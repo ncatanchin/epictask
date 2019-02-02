@@ -3,11 +3,12 @@ import * as ReactDOM from 'react-dom'
 import * as _ from 'lodash'
 import { getValue, isFunction, isString } from "typeguard"
 
-import { shallowEquals,cloneObjectShallow } from "./ObjectUtil"
+import { cloneObjectShallow } from "./ObjectUtil"
 import getLogger from "common/log/Logger"
 import {isRenderer} from "common/Process"
 import {TComponentLoader, TPromisedComponentLoader} from "common/models/CommandTypes"
 import Deferred from "common/Deferred"
+import * as $ from 'jquery'
 
 const
 	log = getLogger(__filename)
@@ -107,163 +108,163 @@ export interface IMapPropsOpts<P> {
 	onRender?:(mapper:IPropMapper,defaultRender:() => any,props:P,data:any) => any
 
 }
-export function MappedProps(
-	propsFn:TPropsFn,opts:IMapPropsOpts<any> = {} as any
-):(Component:typeof React.Component) => any {
-
-	const
-		{watchedProps,onMount,onUnmount, onRender} = opts
-
-	return (Component:typeof React.Component):any => {
-		return class MapPropsOnChange extends React.Component<any,any> {
-
-			private mounted = false
-
-			constructor(props,context) {
-				super(props,context)
-
-				this.state = {
-					mappedProps: {},
-					data: {}
-				}
-			}
-
-			/**
-			 * Map the props
-			 *
-			 * @param props
-			 */
-			private mapProps = (props = this.props) => {
-				const
-					{values,lastProps} = this.state
-
-				if (props === lastProps)
-					return
-
-				if (values && watchedProps.length && watchedProps.length === values.length) {
-					const
-						newValues = watchedProps.map(propWatch =>
-							isFunction(propWatch) ? propWatch(props) : _.get(props,propWatch)
-						)
-
-					if (values.every((value,index) => value === newValues[index])) {
-						log.debug('No change in props')
-						return
-					}
-				}
-
-				this.mounted && this.setState({
-					lastProps: props,
-					mappedProps: propsFn(props,this)
-				})
-			}
-
-
-			shouldComponentUpdate(nextProps,nextState) {
-				return !shallowEquals(this.props,nextProps) || !shallowEquals(this.state.mappedProps,nextState.mappedProps)
-			}
-
-			/**
-			 * Debounced remap()
-			 */
-			remap = _.debounce(() => this.mounted && this.setState({
-						lastProps: null,
-						values: null
-					},() => this.mapProps())
-			,100)
-
-			/**
-			 * On mount check props
-			 */
-			componentWillMount = () => {
-				this.mounted = true
-				if (onMount) {
-					const
-						data = Object.assign({},this.state.data)
-
-					onMount(this,this.props,data)
-					this.setState({
-						data
-					}, () => this.mapProps())
-				} else {
-					this.mapProps()
-				}
-			}
-
-			componentWillUnmount = () => {
-				this.mounted = false
-				if (onUnmount) {
-					const
-						data = Object.assign({},this.state.data)
-
-					onUnmount(this,this.props,data)
-					this.setState({
-						data
-					})
-				}
-			}
-
-			/**
-			 * On update check props
-			 */
-			componentWillReceive = this.mapProps
-
-			/**
-			 *
-			 */
-			defaultRender = ():JSX.Element => {
-				const
-					{mappedProps} = this.state
-
-				return <Component {...this.props} {...mappedProps} />
-			}
-
-			render() {
-				if (onRender) {
-					return onRender(
-						this,
-						this.defaultRender,
-						cloneObjectShallow(this.props,this.state.mappedProps),
-						this.state.data)
-				}
-
-				return this.defaultRender()
-
-			}
-		} as any
-	}
-}
-
-/**
- * DOM Util direct from material ui
- *
- */
-export const Dom = {
-
-	isDescendant(parent, child) {
-		let
-			node = child.parentNode
-
-		while (node !== null) {
-			if (node === parent)
-				return true
-
-			node = node.parentNode
-		}
-
-		return false
-	},
-
-	offset(el) {
-		const
-			rect = el.getBoundingClientRect()
-
-		return {
-			top: rect.top + document.body.scrollTop,
-			left: rect.left + document.body.scrollLeft,
-		}
-	}
-}
+// export function MappedProps(
+// 	propsFn:TPropsFn,opts:IMapPropsOpts<any> = {} as any
+// ):(Component:typeof React.Component) => any {
+//
+// 	const
+// 		{watchedProps,onMount,onUnmount, onRender} = opts
+//
+// 	return (Component:typeof React.Component):any => {
+// 		return class MapPropsOnChange extends React.Component<any,any> {
+//
+// 			private mounted = false
+//
+// 			constructor(props,context) {
+// 				super(props,context)
+//
+// 				this.state = {
+// 					mappedProps: {},
+// 					data: {}
+// 				}
+// 			}
+//
+// 			/**
+// 			 * Map the props
+// 			 *
+// 			 * @param props
+// 			 */
+// 			private mapProps = (props = this.props) => {
+// 				const
+// 					{values,lastProps} = this.state
+//
+// 				if (props === lastProps)
+// 					return
+//
+// 				if (values && watchedProps.length && watchedProps.length === values.length) {
+// 					const
+// 						newValues = watchedProps.map(propWatch =>
+// 							isFunction(propWatch) ? propWatch(props) : _.get(props,propWatch)
+// 						)
+//
+// 					if (values.every((value,index) => value === newValues[index])) {
+// 						log.debug('No change in props')
+// 						return
+// 					}
+// 				}
+//
+// 				this.mounted && this.setState({
+// 					lastProps: props,
+// 					mappedProps: propsFn(props,this)
+// 				})
+// 			}
+//
+//
+// 			shouldComponentUpdate(nextProps,nextState) {
+// 				return !shallowEquals(this.props,nextProps) || !shallowEquals(this.state.mappedProps,nextState.mappedProps)
+// 			}
+//
+// 			/**
+// 			 * Debounced remap()
+// 			 */
+// 			remap = _.debounce(() => this.mounted && this.setState({
+// 						lastProps: null,
+// 						values: null
+// 					},() => this.mapProps())
+// 			,100)
+//
+// 			/**
+// 			 * On mount check props
+// 			 */
+// 			componentWillMount = () => {
+// 				this.mounted = true
+// 				if (onMount) {
+// 					const
+// 						data = Object.assign({},this.state.data)
+//
+// 					onMount(this,this.props,data)
+// 					this.setState({
+// 						data
+// 					}, () => this.mapProps())
+// 				} else {
+// 					this.mapProps()
+// 				}
+// 			}
+//
+// 			componentWillUnmount = () => {
+// 				this.mounted = false
+// 				if (onUnmount) {
+// 					const
+// 						data = Object.assign({},this.state.data)
+//
+// 					onUnmount(this,this.props,data)
+// 					this.setState({
+// 						data
+// 					})
+// 				}
+// 			}
+//
+// 			/**
+// 			 * On update check props
+// 			 */
+// 			componentWillReceive = this.mapProps
+//
+// 			/**
+// 			 *
+// 			 */
+// 			defaultRender = ():JSX.Element => {
+// 				const
+// 					{mappedProps} = this.state
+//
+// 				return <Component {...this.props} {...mappedProps} />
+// 			}
+//
+// 			render() {
+// 				if (onRender) {
+// 					return onRender(
+// 						this,
+// 						this.defaultRender,
+// 						cloneObjectShallow(this.props,this.state.mappedProps),
+// 						this.state.data)
+// 				}
+//
+// 				return this.defaultRender()
+//
+// 			}
+// 		} as any
+// 	}
+// }
+//
+// /**
+//  * DOM Util direct from material ui
+//  *
+//  */
+// export const Dom = {
+//
+// 	isDescendant(parent, child) {
+// 		let
+// 			node = child.parentNode
+//
+// 		while (node !== null) {
+// 			if (node === parent)
+// 				return true
+//
+// 			node = node.parentNode
+// 		}
+//
+// 		return false
+// 	},
+//
+// 	offset(el) {
+// 		const
+// 			rect = el.getBoundingClientRect()
+//
+// 		return {
+// 			top: rect.top + document.body.scrollTop,
+// 			left: rect.left + document.body.scrollLeft,
+// 		}
+// 	}
+// }
 
 
 export function nextFormField(srcElem,wrap = true):Element {

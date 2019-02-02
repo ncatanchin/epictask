@@ -24,6 +24,13 @@ export class UIState implements State<string> {
 
   dialogs:Array<IDialog> = []
 
+  notificationsOpen:boolean = false
+
+  splitters = {
+    notifications: 300 as string|number,
+    issues: 300 as string|number
+  }
+
   searches: {
     [id:string]: Array<ISearchChipData>
   } = {}

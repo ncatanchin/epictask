@@ -1,33 +1,38 @@
 ///<reference path="../../typings/custom.d.ts"/>
 import 'source-map-support/register'
 import "react-hot-loader/patch"
-import "common/util/Ext"
 import "./ReactHotConfig"
+import * as ReactDOM from "react-dom"
+import "moment-timezone"
+import "common/util/RendererExt"
+
 
 import "./assets/fonts/fonts.global.scss"
 import "./assets/css/global.scss"
 import {EventEmitter} from "events"
 import "./Env"
 import * as React from "react"
-import * as ReactDOM from "react-dom"
+//import * as ReactDOM from "react-dom"
+
 import {loadAndInitStore} from "common/store/AppStore"
-import * as jQuery from 'jquery'
-import * as LoDash from 'lodash'
 import "renderer/store/UIAppStoreTypes"
 
-declare global {
-  const $:typeof jQuery
-  const _:typeof LoDash
+
+import * as _ from 'lodash'
+import * as $ from 'jquery'
+
+
+window.onerror = function(message, source, lineno, colno, error) {
+  console.error(message, source, lineno, colno, error)
 }
+
+
 
 require("sugar").extend()
 
 EventEmitter.defaultMaxListeners = Number.MAX_VALUE
 
-Object.assign(global, {
-  $: jQuery,
-  _: LoDash
-})
+
 
 
 const
@@ -62,12 +67,15 @@ async function renderRoot():Promise<void> {
     )
   }
 
-  await import("common/Scheduler")
+  require("common/Scheduler")
   await loadAndInitStore()
+  await require('common/watchers/StorePersistWatcher').default
   await require("./init").default
-  await require("common/watchers").default
 
-  require("renderer/watchers/DialogWatcher")
+  //await require("common/watchers").default
+
+  await (require('common/watchers/ConfigWatcher')).default
+  await (require('common/watchers/DataWatcher')).default
 
   doRender()
 }

@@ -11,6 +11,7 @@ const
 export interface IVerticalSplitPaneProps extends IThemedProperties {
   defaultSize?: number|string
   minSize?: number|string
+  maxSize?: number|string
   primary?: "first"|"second"
   onChange?: (event:any) => any
 }
@@ -25,16 +26,15 @@ export interface IVerticalSplitPaneState {}
  */
 @withStatefulStyles(baseStyles)
 export class VerticalSplitPane extends React.Component<IVerticalSplitPaneProps, IVerticalSplitPaneState> {
-  
+
   constructor(props,context) {
     super(props,context)
   }
-  
+
   render() {
     const {classes, children,onChange,...other} = this.props
-    
+
     return <SplitPane
-      
       className={classes.root}
       resizerClassName={classes.resizer}
       paneClassName={classes.pane}

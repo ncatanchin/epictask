@@ -1,7 +1,7 @@
 import {isDefined} from "typeguard"
 
-
 declare global {
+
   interface Array<T> {
     filterNotNull():Array<T>
     mapNotNull<U>(map: string|sugarjsLocal.Array.mapFn<T, U>, context?: any): U[]

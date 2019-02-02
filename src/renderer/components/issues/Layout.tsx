@@ -44,6 +44,8 @@ import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import CommonElementIds, {CommonElement} from "renderer/CommonElements"
 import {showIssueEditDialog} from "renderer/components/elements/IssueEditDialog"
 import {areDialogsOpen} from "renderer/util/UIHelper"
+import * as $ from 'jquery'
+import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
 
 const AvatarDefaultURL = require("renderer/assets/images/avatar-default.png")
 
@@ -69,14 +71,14 @@ function baseStyles(theme: Theme): any {
     root: [Fill, FlexColumnCenter, {
       background: theme.background.global,
 
-      "&.enable": [{
+      "& .enable": [{
         "& .repo": [makePaddingRem(0, 1), {
           borderRadius: rem(0.5),
           background: IssuesLayout.colors.bg
         }],
         "& .button": [makeMarginRem(2), {
           "& .icon": [makeDimensionConstraints(rem(4)), {
-            fontSize: rem(4)
+            fontSize: rem(6)
           }]
         }]
       }]
@@ -89,7 +91,8 @@ function baseStyles(theme: Theme): any {
         background: IssuesLayout.colors.controlsBgHover
       }]
     }],
-    content: [FlexScale, FlexColumnCenter, PositionRelative, FillWidth]
+    content: [FlexScale, FlexColumnCenter, PositionRelative,Fill, FillWidth],
+    container: [PositionRelative,FlexScale,FillWidth]
   }
 }
 
@@ -103,6 +106,8 @@ interface SP {
   user: IUser
   isRepoEnabled: boolean
   splitter: number | string
+  notificationsSplitter: number | string
+  notificationsOpen: boolean
 }
 
 const selectors = {
@@ -110,14 +115,17 @@ const selectors = {
   repo: selectedRepoSelector,
   org: selectedOrgSelector,
   isRepoEnabled: isSelectedRepoEnabledSelector,
-  splitter: (state: IRootState) => state.AppState.issues.splitter
+  splitter: (state: IRootRendererState) => state.UIState.splitters.issues,
+  notificationsSplitter: (state: IRootRendererState) => state.UIState.splitters.notifications,
+  notificationsOpen: (state: IRootRendererState) => state.UIState.notificationsOpen
 }
 
-const actions = new AppActionFactory()
+const appActions = new AppActionFactory()
+const uiActions = new UIActionFactory()
 
-export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P & SP): React.ReactElement<P & SP> {
+export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P & SP): React.ReactElement<P & SP> {
   const
-    {classes, repo, org, user, isRepoEnabled, splitter} = props,
+    {classes, repo, org, notificationsSplitter, notificationsOpen, user, isRepoEnabled, splitter} = props,
     rootRef = useRef<any>(null),
     repoSelectRef = useRef<any>(null),
     id = CommonElementIds.IssuesLayout,
@@ -125,20 +133,20 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
     {props: commandManagerProps} = useCommandManager(id, useCallback((builder: CommandContainerBuilder): ICommandContainerItems => {
         const commandManager = getCommandManager()
 
-      function makeContainerFocusHandler(container: CommonElement.IssueList | CommonElement.IssueView): () => void {
-        return () => {
-          const containerId = CommonElement[container]
-          if (commandManager.isFocused(containerId)) {
-            log.info("Already focused",containerId)
-          } else {
-            log.info("Focusing",containerId)
-            commandManager.focusOnContainer(containerId)
-            //commandManager.setContainerFocused(containerId,true,null)
+        function makeContainerFocusHandler(container: CommonElement.IssueList | CommonElement.IssueView): () => void {
+          return () => {
+            const containerId = CommonElement[container]
+            if (commandManager.isFocused(containerId)) {
+              log.info("Already focused", containerId)
+            } else {
+              log.info("Focusing", containerId)
+              commandManager.focusOnContainer(containerId)
+              //commandManager.setContainerFocused(containerId,true,null)
+            }
           }
         }
-      }
 
-      return builder
+        return builder
           .command(
             "CommandOrControl+o",
             (cmd, event) => guard(() => {
@@ -195,12 +203,12 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
             overrideInput: false
           })
           .make()
-      },[repoSelectRef]),
+      }, [repoSelectRef]),
       rootRef
     )
 
   const onRepoSelection = useCallback((repo: IRepo): void => {
-    actions.setSelectedRepo(repo)
+    appActions.setSelectedRepo(repo)
   }, [])
 
   const onRepoSelectOpen = useCallback((open: boolean): void => {
@@ -208,14 +216,18 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
   }, [])
 
   const onSplitterChange = useCallback((newSize: number): void => {
-    log.debug("Splitter change", newSize)
-    actions.setIssuesSplitter(newSize)
+    uiActions.setSplitter("issues", newSize)
   }, [])
 
+  const onNotificationsSplitterChange = useCallback((newSize: number): void => {
+    if (notificationsOpen)
+      uiActions.setSplitter("notifications", newSize)
+  }, [notificationsOpen])
 
   const rightControls = useMemo(() =>
     <div className={mergeClasses(classes.controls, repoSelectOpen && "open")}>
-      <RepoSelect id={CommonElementIds.RepoSelect} selectRef={repoSelectRef} onOpen={onRepoSelectOpen} onSelection={onRepoSelection} value={repo}/>
+      <RepoSelect id={CommonElementIds.RepoSelect} selectRef={repoSelectRef} onOpen={onRepoSelectOpen}
+                  onSelection={onRepoSelection} value={repo}/>
       <Img
         src={getValue(() => user.avatar_url)}
         loader={<img src={AvatarDefaultURL}/>}
@@ -229,9 +241,9 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
   }, [classes])
 
   const renderRepoIsNotEnabled = useCallback((): JSX.Element => {
-    return <div className={classes.content}>
+    return <div className={mergeClasses(classes.content,"enable")}>
       <Typography variant="h2">Enable <span className="repo">{repo.full_name}</span>?</Typography>
-      <IconButton className="button" onClick={() => actions.enableRepo(repo)}>
+      <IconButton className="button" onClick={() => appActions.enableRepo(repo)}>
         <CheckIcon className="icon"/>
       </IconButton>
     </div>
@@ -239,9 +251,15 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
 
   const renderIssues = useCallback((): JSX.Element => {
     return <div className={classes.content}>
-      <VerticalSplitPane defaultSize={splitter} minSize={400} onChange={onSplitterChange}>
-        <IssueList/>
-        <IssueDetails/>
+
+        <VerticalSplitPane
+          defaultSize={splitter}
+          minSize={400}
+          onChange={onSplitterChange}
+        >
+          <IssueList/>
+          <IssueDetails/>
+
       </VerticalSplitPane>
     </div>
 
@@ -253,13 +271,24 @@ export default StyledComponent<P,SP>(baseStyles, selectors)(function (props: P &
     {...commandManagerProps}
   >
     <Header rightControls={rightControls}/>
+    <div className={classes.container}>
+    <VerticalSplitPane
 
+      defaultSize={notificationsOpen ? notificationsSplitter : 0}
+      primary="second"
+
+      minSize={notificationsOpen ? 300 : 0}
+      maxSize={notificationsOpen ? "50%" : 0}
+    >
     {!repo ?
       renderSelectRepo() :
       !isRepoEnabled ?
         renderRepoIsNotEnabled() :
         renderIssues()
     }
+    <div/>
+    </VerticalSplitPane>
+    </div>
   </div>
 
 })

@@ -23,12 +23,12 @@ import {getIssueEvents} from "renderer/net/IssueAPI"
 const log = getLogger(__filename)
 
 async function getAppActions():Promise<AppActionFactory> {
-	const {AppActionFactory} = await import("common/store/actions/AppActionFactory")
+	const {AppActionFactory} = require("common/store/actions/AppActionFactory")
 	return new AppActionFactory()
 }
 
 async function getDataActions():Promise<DataActionFactory> {
-	const {DataActionFactory} = await import("common/store/actions/DataActionFactory")
+	const {DataActionFactory} = require("common/store/actions/DataActionFactory")
 	return new DataActionFactory()
 }
 
@@ -191,6 +191,15 @@ async function init():Promise<void> {
 	EventHub.on("RepoIssuesSynced",async (repoId:number, timestamp:number) =>
 		(await getAppActions()).setDataSynced("issues",[repoId],timestamp)
 	)
+
+  EventHub.on("NotificationsSynced",async (timestamp:number) => {
+    const
+      dataActions = await getDataActions(),
+      appActions = await getAppActions()
+
+		appActions.setDataSynced("notifications", [0], timestamp)
+		dataActions.setData("notifications",await db.notifications.toArray())
+  })
 
 	Object
 		.values(ObjectEvent)

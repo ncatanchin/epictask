@@ -1,4 +1,3 @@
-import {List} from 'immutable'
 import {getValue, guard, isFunction, isNil, isObject, isString} from "typeguard"
 import getLogger from "common/log/Logger"
 
@@ -13,9 +12,6 @@ export function clearArray<T>(arr:Array<T>):Array<T> {
 	return arr.splice(0,arr.length)
 }
 
-export function isListType<T>(o:any,type:{new():T}):o is List<T> {
-	return (List.isList(o))
-}
 
 export function safePush<T>(arr:Array<T>,value:T):Array<T> {
 	return (arr || [])
@@ -113,11 +109,10 @@ export function shallowEqualsArrayOrList(val1,val2,...props:string[]):boolean {
 		return false
 
 	const
-		isArray = (Array.isArray(val1) && Array.isArray(val2) && val1.length === val2.length),
-		isList = List.isList(val1) && List.isList(val2) && val1.size === val2.size
+		isArray = (Array.isArray(val1) && Array.isArray(val2) && val1.length === val2.length)
 
 
-	return (isArray || isList) && val1.every((testVal1,index) =>  {
+	return (isArray) && val1.every((testVal1,index) =>  {
 		const
 			testVal2 = (isArray ? val2[index] : val2.get(index))
 

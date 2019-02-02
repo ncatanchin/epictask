@@ -6,8 +6,10 @@ import {IThemedProperties, makeMarginRem, NestedStyles, rem, StyleDeclaration} f
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 
 import CodeBlock from "renderer/components/markdown/renderers/CodeBlock"
+import PBlock from "renderer/components/markdown/renderers/PBlock"
 import * as ReactMarkdown from "react-markdown"
-
+import "renderer/assets/css/markdown.github.scss"
+import classNames from "classnames"
 const log = getLogger(__filename)
 
 
@@ -38,9 +40,10 @@ export default StyledComponent<P>(baseStyles)(function MarkdownView(props: P): R
     source={source}
     renderers={{
       ...ReactMarkdown.renderers,
-      code: CodeBlock
+      code: CodeBlock,
+      text: PBlock
     }}
-    className={classes.root}
+    className={classNames(classes.root,"markdown")}
     {...other}
   />
 })

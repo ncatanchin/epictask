@@ -8,6 +8,7 @@ import {
   StyledElement,
   StyledWrapperComponentProducer
 } from "renderer/components/elements/StyledComponent"
+import * as _ from 'lodash'
 
 const log = getLogger(__filename)
 
