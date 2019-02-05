@@ -7,6 +7,7 @@ import {DialogDefaults, IDialog} from "renderer/models/Dialog"
 import {getCommandManager} from "common/command-manager"
 import {ISearchChip} from "renderer/search/Search"
 import * as _ from 'lodash'
+import {AppState} from "common/store/state/AppState"
 
 const
   log = getLogger(__filename)
@@ -38,6 +39,13 @@ export class UIActionFactory extends ActionFactory<UIState, ActionMessage<UIStat
       getCommandManager().popStack()
     }
   }
+
+  // @ActionReducer()
+  // setNotificationsOpen(notificationsOpen:boolean) {
+  //   return (state: UIState) => patchState(state,{
+  //     notificationsOpen
+  //   })
+  // }
 
   @ActionReducer()
   showDialog(dialog:IDialog) {

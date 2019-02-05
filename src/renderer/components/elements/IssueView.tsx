@@ -1,26 +1,20 @@
 import * as React from "react"
-import {useCallback, useEffect, useMemo, useState} from "react"
+import {useCallback, useEffect, useRef} from "react"
 import getLogger from "common/log/Logger"
 import {IThemedProperties, remToPx} from "renderer/styles/ThemedStyles"
-import {Selectors, StyledComponent, StyledComponentProducer} from "renderer/components/elements/StyledComponent"
+import {Selectors, StyledComponent} from "renderer/components/elements/StyledComponent"
 import {IIssue, IIssueEventData} from "common/models/Issue"
-import {getIssueEvents} from "renderer/net/IssueAPI"
 import baseStyles from "renderer/components/elements/IssueDetails.styles"
 import IssueEvents from "renderer/components/elements/IssueEvents"
 import IssueInfo from "renderer/components/elements/IssueInfo"
 import {dataSelector, selectedIssuesSelector} from "common/store/selectors/DataSelectors"
 import FocusedDiv from "renderer/components/elements/FocusedDiv"
-import {useRef} from "react"
 import {useCommandManager, useFocused} from "renderer/command-manager-ui"
 import CommonElementIds from "renderer/CommonElements"
 import {getValue} from "typeguard"
 import IssueViewController from "renderer/controllers/IssueViewController"
-import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
 import {makeCommandManagerAutoFocus} from "common/command-manager"
-import {
-  ControllerContext,
-  ControllerProviderState, useController, withController
-} from "renderer/controllers/Controller"
+import {useController, withController} from "renderer/controllers/Controller"
 
 const log = getLogger(__filename)
 

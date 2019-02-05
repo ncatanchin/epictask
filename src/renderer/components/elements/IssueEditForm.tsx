@@ -1,32 +1,28 @@
 import * as React from "react"
+import {useCallback, useMemo, useRef, useState} from "react"
 import getLogger from "common/log/Logger"
 import {
-  IThemedProperties,
-  StyleDeclaration,
-  withStatefulStyles,
-  NestedStyles,
-  mergeClasses,
-  FlexColumnCenter,
-  FlexAuto,
-  rem,
-  FlexScale,
-  FlexRowCenter,
   Ellipsis,
+  Fill,
+  FillWidth,
+  FlexAuto,
+  FlexColumn,
+  FlexRow,
+  FlexRowCenter,
+  FlexScale,
+  IThemedProperties,
   makePaddingRem,
   PositionRelative,
-  FillWidth, FlexColumn, makeWidthConstraint, FlexRow, OverflowHidden, Fill, makeHeightConstraint, PositionAbsolute
+  rem,
+  StyleDeclaration
 } from "renderer/styles/ThemedStyles"
-import {createStructuredSelector} from "reselect"
-import {connect} from "common/util/ReduxConnect"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {IIssue, IIssueEventData} from "common/models/Issue"
 import {ICollaborator, IRepo} from "common/models/Repo"
 import {dataSelector, selectedRepoSelector} from "common/store/selectors/DataSelectors"
 import MarkdownEditor from "renderer/components/markdown/MarkdownEditor"
-import {useContext, useEffect, useMemo, useState} from "react"
 import {getValue, guard} from "typeguard"
 import {IssuesUpdateParams} from "@octokit/rest"
-import {useCallback} from "react"
 import * as _ from 'lodash'
 import {ILabel} from "common/models/Label"
 import TextField from "./TextField"
@@ -35,17 +31,9 @@ import Milestone from "renderer/components/elements/Milestone"
 import {IMilestone} from "common/models/Milestone"
 import {IDataSet} from "common/Types"
 import Labels from "renderer/components/elements/Labels"
-import Button from "@material-ui/core/Button/Button"
-import SaveIcon from '@material-ui/icons/Save'
-import CancelIcon from '@material-ui/icons/CancelOutlined'
-import {createIssue, patchIssue} from "renderer/net/IssueAPI"
-import {useCommandManager} from "renderer/command-manager-ui"
-import {makeCommandManagerAutoFocus} from "common/command-manager"
-import {useRef} from "react"
 import CommonElementIds from "renderer/CommonElements"
-import MUITextField from "@material-ui/core/TextField/TextField"
-import IssueEditController, {IssueEditContext} from "renderer/controllers/IssueEditController"
-import {useController, withController} from "renderer/controllers/Controller"
+import IssueEditController from "renderer/controllers/IssueEditController"
+import {useController} from "renderer/controllers/Controller"
 import {uiTask} from "renderer/util/UIHelper"
 
 const log = getLogger(__filename)

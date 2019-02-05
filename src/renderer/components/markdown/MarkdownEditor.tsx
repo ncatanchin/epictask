@@ -108,9 +108,7 @@ export default StyledComponent<P>(baseStyles)(function MarkdownEditor(props: P):
         autofocus: autoFocus,
         lineWrapping: true,
         lineNumbers: true,
-        mode: {
-          name: "gfm"
-        },
+        mode: "gfm",
         theme: "darcula"
       })
       //codeMirror.setValue(defaultValue)

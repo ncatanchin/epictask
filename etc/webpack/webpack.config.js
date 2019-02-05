@@ -20,17 +20,13 @@ function makeConfig(isMain) {
    * Create externals array
    */
   function makeExternals() {
-    const whitelist = //isMain ? [] :
-      //[/webpack/,/react-hot/,/codemirror/,/highlight\.js/]
-      //[/webpack/,/react-hot/,/codemirror/,/highlight\.js/]
-    // ,
-      [
+    const whitelist = [
       /webpack/,
       /codemirror/,
       /highlight\.js/,
-       /octokit/,
+      /octokit/,
       /hot-loader/,
-       /node-fetch/,
+      /node-fetch/,
       // /react/,
       // /babel/,
       /react-hot/,
@@ -96,18 +92,18 @@ function makeConfig(isMain) {
           test: /^\.(scss|css)$/,
           use: ['style-loader!css-loader!sass-loader']
         },
-        {
-          test: /\.jsx?$/,
-            //exclude: /node_modules/,
-          include: /node_modules/,
-            use: [{
-            //Path.resolve(rootPath,"node_modules",
-            loader: "babel-loader",
-            options: {
-              cacheDirectory: true
-            }
-          }]
-        },
+        // {
+        //   test: /\.jsx?$/,
+        //     //exclude: /node_modules/,
+        //   include: /node_modules/,
+        //     use: [{
+        //     //Path.resolve(rootPath,"node_modules",
+        //     loader: "babel-loader",
+        //     options: {
+        //       cacheDirectory: true
+        //     }
+        //   }]
+        // },
         {
           test: /\.(j|t)sx?$/,
           exclude: /node_modules/,
@@ -204,7 +200,6 @@ module.exports = (isMain, webpackConfig, env, ...args) => {
   config.optimization.minimize = false
   config.optimization.concatenateModules = true
   delete config.optimization.minimizer
-
 
 
   return config

@@ -8,6 +8,7 @@ import getLogger from "common/log/Logger"
 import {appSelector} from "common/store/selectors/AppSelectors"
 import {IIssue} from "common/models/Issue"
 import * as moment from "moment"
+import {INotification} from "common/models/Notification"
 
 const log = getLogger(__filename)
 
@@ -72,9 +73,20 @@ export const issuesSortedAndFilteredSelector = createSelector(
 	(issues:IDataSet<IIssue>) => {
 		const
 			sortedData = [...issues.data]
-				.sortBy(issue => moment(issue.updated_at || issue.created_at).valueOf(),true),
-			sortedIssues = makeDataSet(sortedData)
+				.sortBy(issue => moment(issue.updated_at || issue.created_at).valueOf(),true)
 
-		return sortedIssues
+		return makeDataSet(sortedData)
 	}
+)
+
+export const notificationsUnreadSelector = createSelector(
+	dataSelector(state => state.notifications),
+	(notifications:IDataSet<INotification>) =>
+		notifications.data.filter(notification => !notification.read).length
+)
+
+export const sortedNotificationsSelector = createSelector(
+  dataSelector(state => state.notifications),
+  (notifications:IDataSet<INotification>) =>
+    makeDataSet(notifications.data.sortBy(it => it.updated_at,true))
 )

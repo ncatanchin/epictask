@@ -27,6 +27,7 @@ export class AppState implements State<string> {
 	selectedRepoId:number | null
 	selectedOrgId:number | null
   selectedIssueIds = Array<number>()
+	selectedNotificationIds = Array<string>()
 
 	status: IAppStatus = makeDefaultAppStatus()
 

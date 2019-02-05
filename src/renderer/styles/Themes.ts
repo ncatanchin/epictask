@@ -34,6 +34,7 @@ const darkPalette = {
   action: makeMaterialPalette("#5054ff", "A200", "A400", "A700"),
   open: makeMaterialPalette("#22993E", "A200", "A400", "A700"),
   closed: makeMaterialPalette("#dd2b2c", "A200", "A400", "A700"),
+  notifications: makeMaterialPalette("#ff3633", "A200", "A400", "A700"),
   pr: makeMaterialPalette("#C297FF", "A200", "A400", "A700")
 } as IThemePalette
 
@@ -147,10 +148,10 @@ function makeDarkThemeExt() {
         none: darken(primary.contrastText, 0.4),
         bg: darken(primary.dark, 0.8),
         commentHeader: primary.contrastText,
-        commentHeaderBg: darken(primary.main, 0.9),
+        commentHeaderBg: primary.main,
         commentBorder: darken(primary.main, 0.8),
-        commentBodyBg: darken(primary.main, 0.85),
-        commentText: darken(primary.contrastText, 0.3),
+        commentBodyBg: darken(primary.main, 0.3),
+        commentText: primary.contrastText,
         connection: darken(primary.main, 0.6),
         focusColor,
         focusColorText
@@ -270,6 +271,7 @@ function makeDarkThemeExt() {
       colors: {},
       dimensions: {}
     },
+
     BlockingWorkProgress = {
       colors: {
         bg: `border-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,
@@ -288,8 +290,37 @@ function makeDarkThemeExt() {
     SearchProvider = {
       colors: {
         bg: headerBg,
-        text: darken(primary.contrastText,0.3)
+        text: darken(primary.contrastText, 0.3)
       }
+    },
+    NotificationListItem = {
+      colors: Run(() => {
+        const normal = {
+            bg: `border-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
+            metadata: darken(primary.contrastText, 0.7),
+            updatedAt: darken(primary.contrastText, 0.7),
+            topBg: Transparent,//`border-box radial-gradient(${darken(primary.dark, 0.6)}, ${darken(primary.dark, 0.7)})`,
+            boxShadow: "inset 0 0 0.2rem 0.2rem rgba(10,10,10,0.3)",
+            dividerBoxShadow: "0px 0rem 0.5rem 0.3rem rgba(3, 12, 7, 0.80)",
+            outline: Transparent,
+            text: primary.contrastText,
+            marker: Transparent
+          },
+          makeStatusColor = (color: Color): (typeof normal) => ({
+            ...normal,
+            bg: `border-box radial-gradient(${color.main}, ${lighten(color.main, 0.2)})`,//darken(primary.dark,0.4),
+            topBg: Transparent,//`border-box radial-gradient(${lighten(color.main, 0.1)}, ${lighten(color.main, 0.3)})`,
+            //labelScrollFade: lighten(color.main, 0.1),//`$, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
+            metadata: lighten(color.contrastText, 0.7)
+            //subtitle: lighten(color.contrastText, 0.3)
+          })
+
+
+        return {
+          normal,
+          selected: makeStatusColor(action)
+        }
+      }) //as {[color in NotificationListItemColor]:string}
     }
 
   return {
@@ -348,6 +379,7 @@ function makeDarkThemeExt() {
       BlockingWorkProgress,
       MenuList,
       SearchProvider,
+      NotificationListItem
     },
 
     outline,

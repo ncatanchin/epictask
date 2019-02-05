@@ -25,6 +25,13 @@ export class AppActionFactory extends ActionFactory<AppState, ActionMessage<AppS
 
 
 
+  @ActionReducer()
+  setSelectedNotificationIds(selectedNotificationIds:Array<string>) {
+    return (state:AppState) => patchState(state,{
+      selectedNotificationIds
+    })
+  }
+
   setSelectedRepo(selectedRepo: IRepo) {
     this.setSelectedRepoId(selectedRepo ? selectedRepo.id : 0)
   }

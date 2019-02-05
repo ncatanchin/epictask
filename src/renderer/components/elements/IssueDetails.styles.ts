@@ -24,6 +24,7 @@ import {
 } from "renderer/styles/ThemedStyles"
 import {Color} from "csstype"
 import {Run} from "common/util/fn"
+import {darken} from "@material-ui/core/styles/colorManipulator"
 
 declare global {
   type IssueDetailsColor =
@@ -128,7 +129,10 @@ export default function baseStyles(theme: Theme): StyleDeclaration {
 
           }],
 
-          [directChild("comment")]: [PositionRelative, FlexAuto, FillWidth, OverflowHidden, makePaddingRem(0, 1, 0, 1), FlexRow, { //
+          [directChild("comment")]: [makeTransition("backgroundColor"),PositionRelative, FlexAuto, FillWidth, OverflowHidden, makePaddingRem(0, 1, 0, 1), FlexRow, { //
+            "&.focused": {
+              backgroundColor: darken(colors.commentBodyBg,0.4),
+            },
             "& > .commentInternal": [FlexScale, FlexRow, PositionRelative,{
               maxWidth: `calc(100% - ${rem(2)})`,
               "&.first": [makePaddingRem(1, 1, 0.5, 1), {
@@ -160,14 +164,17 @@ export default function baseStyles(theme: Theme): StyleDeclaration {
                 borderRadius: rem(0.3),
                 borderTopLeftRadius: 0,
                 "&.focused": [{
-                  border: focusedBorder,
+                  //border: focusedBorder,
                   "& > .content > .top": [{
-                    borderBottom: focusedBorder,
-                    backgroundColor: colors.focusColor,
+                    //borderBottom: focusedBorder,
+                    //backgroundColor: colors.focusColor,
                     color: colors.focusColorText
                   }]
                 }],
                 [directChild("content")]: [PositionRelative, FlexColumn, {
+                  borderBottomRightRadius: rem(0.3),
+                  borderTopRightRadius: rem(0.3),
+                  borderBottomLeftRadius: rem(0.3),
                   background: colors.commentHeaderBg,
                   [directChild("top")]: [makeTransition(['backgroundColor','color','borderBottom']),makePaddingRem(0, 1), FlexAuto, FlexRowCenter, FillWidth, makeHeightConstraint(rem(2.2)), {
                     borderBottom: connectionBorder,
@@ -239,10 +246,10 @@ export default function baseStyles(theme: Theme): StyleDeclaration {
                   top: remToPx(1)
                 }],
                 "&.focused": {
-                  background: colors.focusColor,
-                  borderLeft: focusedBorder,
-                  borderTop: focusedBorder,
-                  borderBottom: focusedBorder,
+                  //background: colors.focusColor,
+                  // borderLeft: focusedBorder,
+                  // borderTop: focusedBorder,
+                  // borderBottom: focusedBorder,
                   "&::after": [{
                     //borderTop: focusedBorder,
                     background: action.main,

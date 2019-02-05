@@ -1,37 +1,30 @@
 import * as React from "react"
+import {useCallback} from "react"
 import getLogger from "common/log/Logger"
 import {
   Fill,
-  FillHeight, FillWidth, FlexAuto, FlexColumn,
-  FlexRowCenter, FlexScale,
-  IThemedProperties, makeHeightConstraint,
+  FillWidth,
+  FlexColumn,
+  FlexScale,
+  IThemedProperties,
   makeTransition,
-  mergeClasses,
-  NestedStyles, OverflowHidden,
+  OverflowHidden,
   PositionAbsolute,
   PositionRelative,
-  StyleCallback,
   StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {IIssue} from "common/models/Issue"
 import {IDataSet} from "common/Types"
 import IssueListItem from "renderer/components/elements/IssueListItem"
 import List, {ListRowProps} from "renderer/components/elements/List"
-import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 import {getValue} from "typeguard"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {selectedIssueIdsSelector} from "common/store/selectors/AppSelectors"
 import {AppActionFactory} from "common/store/actions/AppActionFactory"
-import * as _ from 'lodash'
-import {isEqual} from 'lodash'
 import {makeCommandManagerAutoFocus} from "common/command-manager"
-import {issuesSortedAndFilteredSelector} from "common/store/selectors/DataSelectors"
-import {useFocused} from "renderer/command-manager-ui/CommandComponent"
 import FocusedDiv from "renderer/components/elements/FocusedDiv"
 import CommonElementIds from "renderer/CommonElements"
 import IssueViewController from "renderer/controllers/IssueViewController"
-import {confirmDialog} from "renderer/util/UIHelper"
-import {StyleRules} from "@material-ui/core/styles"
 import SearchProviderField from "renderer/components/elements/SearchProviderField"
 import issueSearchProvider from "renderer/search/SearchIssues"
 import {ISearchChip} from "renderer/search/Search"
@@ -149,7 +142,7 @@ export default StyledComponent<P,SP>(baseStyles,{
     </Consumer>
 
 
-  },[selectedIndexes,selectedIssueIds])
+  },[selectedIssueIds])
 
 
 

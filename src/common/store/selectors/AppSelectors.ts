@@ -17,3 +17,8 @@ export const customAcceleratorsSelector = appSelector(
 export const selectedIssueIdsSelector = appSelector(
   (state:AppState) => state.selectedIssueIds
 )
+
+
+export const selectedNotificationIds = appSelector(
+  (state:AppState) => state.selectedNotificationIds
+)

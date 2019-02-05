@@ -92,13 +92,6 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
   }, [dataSet, dataSet.data, dataSet.total])
 
 
-  // useLayoutEffect(() => {
-  //   if (selectedIndexes && !_.isEqual(internalSelectedIndexesRef.current,selectedIndexes)) {
-  //     internalSelectedIndexesRef.current = selectedIndexes
-  //     setInternalSelectedIndexes(selectedIndexes)
-  //   }
-  // }, [selectedIndexes])
-
   /**
    * Set selected indexes
    *
@@ -109,13 +102,8 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
 
     newSelectedIndexes = [...newSelectedIndexes]
 
-    // setInternalSelectedIndexes(newSelectedIndexes)
-    // internalSelectedIndexesRef.current = newSelectedIndexes
-
-    //if (isFunction(onSelectedIndexesChanged)) {
     onSelectedIndexesChanged(dataSetRef.current, newSelectedIndexes)
-    //}
-  }, [dataSetRef.current, selectedIndexes])
+  }, [dataSetRef.current, selectedIndexes,onSelectedIndexesChanged])
 
   /**
    * Select all items in the list
@@ -169,27 +157,31 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
    * On appropriate changes, update registered commands
    */
 
-  const {props: commandManagerProps} = useCommandManager(id, useCallback(builder => {
-    if (selectable)
-      builder
-        .command("CommandOrControl+a", selectAll, {
-          overrideInput: false
-        })
-        .command("Escape", deselectAll)
-        .command("Shift+ArrowDown", makeMoveSelection(1, true), {
-          overrideInput: false
-        })
-        .command("Shift+ArrowUp", makeMoveSelection(-1, true), {
-          overrideInput: false
-        })
-        .command("ArrowDown", makeMoveSelection(1), {
-          overrideInput: false
-        })
-        .command("ArrowUp", makeMoveSelection(-1), {
-          overrideInput: false
-        })
-    return builder.make()
-  },[makeMoveSelection,selectAll]), rootRef, commandManagerOptions)
+  const
+    commandBuilder = useCallback(builder => {
+      if (selectable)
+        builder
+          .command("CommandOrControl+a", selectAll, {
+            overrideInput: false
+          })
+          .command("Escape", deselectAll)
+          .command("Shift+ArrowDown", makeMoveSelection(1, true), {
+            overrideInput: false
+          })
+          .command("Shift+ArrowUp", makeMoveSelection(-1, true), {
+            overrideInput: false
+          })
+          .command("ArrowDown", makeMoveSelection(1), {
+            overrideInput: false
+          })
+          .command("ArrowUp", makeMoveSelection(-1), {
+            overrideInput: false
+          })
+      return builder.make()
+    },[selectable,makeMoveSelection,selectAll]),
+    {
+      props: commandManagerProps
+    } = useCommandManager(id, commandBuilder, rootRef, commandManagerOptions)
 
 
   /**
@@ -202,6 +194,7 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
       dataSet,
       selectedIndexesContext,
       onClick: (event: React.MouseEvent) => {
+        log.info("On list item clicked")
         let newSelectedIndexes = [...selectedIndexes]
 
         const
@@ -226,7 +219,7 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
         setSelectedIndexes(newSelectedIndexes)
       }
     }) as any)
-  }, [selectedIndexes, dataSet, dataSetRef.current])
+  }, [selectedIndexes, finalRowRenderer,onSelectedIndexesChanged, dataSet, dataSetRef.current])
 
   const {Provider: SelectedIndexesProvider} = selectedIndexesContext
 

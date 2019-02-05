@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import getLogger from "common/log/Logger"
-import {IThemedProperties, makeMarginRem, NestedStyles, rem, StyleDeclaration} from "renderer/styles/ThemedStyles"
+import {IThemedProperties, makeMarginRem, rem, StyleDeclaration} from "renderer/styles/ThemedStyles"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 
 import CodeBlock from "renderer/components/markdown/renderers/CodeBlock"
@@ -20,10 +20,17 @@ function baseStyles(theme: Theme): StyleDeclaration {
         marginBlockStart: rem(0.5),
         marginBlockEnd: rem(0.5)
       },
+      "& li > span, & li > code": {
+        lineHeight: 1.6
+      },
       "& img": {
         maxWidth: "100%",
         objectFit: "contain"
-      }
+      },
+      // "& img": {
+      //   maxWidth: "100%",
+      //   objectFit: "contain"
+      // }
     }]
   }
 }

@@ -1,4 +1,5 @@
 import * as React from "react"
+import {useCallback, useEffect, useState} from "react"
 import getLogger from "common/log/Logger"
 import {
   child,
@@ -43,14 +44,8 @@ import {Color} from "csstype"
 import HorizontalScroll from "renderer/components/elements/HorizontalScroll"
 import Collaborators from "renderer/components/elements/Collaborators"
 import {ICollaborator} from "common/models/Repo"
-import {
-  GitPullRequest as PullRequestIcon,
-  IssueClosed as ClosedIcon,
-  IssueOpened as OpenIcon,
-  PrimitiveDot as DotIcon
-} from "@githubprimer/octicons-react"
+import {PrimitiveDot as DotIcon} from "@githubprimer/octicons-react"
 import IssueStateLabel from "renderer/components/elements/IssueStateLabel"
-import {useCallback, useEffect, useState} from "react"
 import {shortId} from "common/IdUtil"
 
 const

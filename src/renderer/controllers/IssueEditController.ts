@@ -26,8 +26,10 @@ export default class IssueEditController extends Controller {
     return ({
       body: this.makeDefaultBody(),
       title: getValue(() => this.issue && this.issue.title, ""),
-      assignees: getValue(() => this.issue.assignees.map(assignee => assignee.login), []),
-      assignee: getValue(() => this.issue.assignee.login, null),
+      assignees: (getValue(() => this.issue.assignees.length > 0,false) ?
+        getValue(() => this.issue.assignees.map(assignee => assignee.login), []) :
+        getValue(() => [this.issue.assignee.login], []))
+        .filterNotNull(),
       milestone: getValue(() => this.issue.milestone.number, null),
       labels: getValue(() => this.issue.labels.map(label => label.name), [])
     })
@@ -45,6 +47,10 @@ export default class IssueEditController extends Controller {
     const
       defaultPatch = this.defaultPatch,
       patch = {...this.patch}
+
+    // WE ONLY USE ASSIGNEES - NEW PROP
+    delete patch.assignee
+    delete defaultPatch.assignee
 
     Object.keys(defaultPatch).forEach(key => {
       if (_.isEqual(defaultPatch[key],patch[key])) {

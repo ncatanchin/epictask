@@ -242,6 +242,7 @@ export interface IThemePalette {
 	error: Color
   open: Color
   closed: Color
+	notifications: Color
   pr: Color
 }
 

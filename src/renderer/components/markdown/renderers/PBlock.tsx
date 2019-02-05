@@ -1,15 +1,8 @@
-//import "highlight.js/styles/atom-one-dark.css"
-// import "codemirror/lib/codemirror.css"
-// import "codemirror/theme/darcula.css"
-
 import * as React from "react"
+import {useRef} from "react"
 import getLogger from "common/log/Logger"
-import {IThemedProperties, NestedStyles} from "renderer/styles/ThemedStyles"
-import {StyledComponent} from "renderer/components/elements/StyledComponent"
-import * as highlight from "highlight.js"
-//import 'highlight.js/styles/github.css'
-import {useEffect, useRef} from "react"
-import * as _ from 'lodash'
+import {IThemedProperties} from "renderer/styles/ThemedStyles"
+
 const log = getLogger(__filename)
 
 
@@ -28,11 +21,16 @@ export default function EpicPBlock(props: P): React.ReactElement<P> {
 
 
 
-  log.info("p ", literal,value,children)
-  let source = literal || value
-  if (source.indexOf("\n") > -1)
-    source = `${source.replace(/\n/g, "<br/>").replace(/ /g,"&nbsp;")}`
-  return _.isEmpty(source && source.trim()) ? <span/> :
-    <span dangerouslySetInnerHTML={{ __html:source}}/>
+  const source = literal || value
+  //replace(/ /g,"&nbsp;")
+  const lines = source.split("\n")
+  const html = lines
+    .map((line,index) =>
+      `<span>${line.replace(/\t/g,"&nbsp;&nbsp;&nbsp;&nbsp;")}</span>${index < lines.length - 1 ? "<br/>" : ""}`)
+    .join("")
+
+  //log.info("p ", {source,html,children,hasTab: source.includes("\t")})
+  //_.isEmpty(source && source.trim()) ? <span/> :
+  return <span dangerouslySetInnerHTML={{ __html:html}}/>
 
 }
