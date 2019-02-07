@@ -17,6 +17,7 @@ import {IComment} from "common/models/Comment"
 import {findIssueIdFromComment, findIssueIdFromEvent} from "renderer/net/IssueAPI"
 import * as moment from "moment"
 import {makeStatusMessage, pushStatusMessage} from "common/util/AppStatusHelper"
+import timestampCache from "common/util/TimestampCache"
 const log = getLogger(__filename)
 
 
@@ -74,26 +75,23 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 			await BBPromise.map(repos, async (repo:IRepo) => {
 				try {
 					const
-						timestamp = getValue(() => getStoreState().AppState.syncs["issues"].records[repo.id].timestamp, 0) as number,
+						timestampId = `repo-${repo.id}-issues`,
+						timestamp = timestampCache.get(timestampId,0),
 						repoParams = getRepoParams(repo),
 						params = {
 							...repoParams,
+							per_page: 100,
 							since: formatTimestamp(timestamp)
 						},
 						issueOpts = (gh.issues.listForRepo as any).endpoint.merge({
 							...params,
 							state: "all",
 							sort: "updated",
-							direction: "desc"
-						}),
-            commentOpts = (gh.issues.listCommentsForRepo as any).endpoint.merge({
-							...params,
-							sort: "updated",
 							direction: "asc"
-            }),
-            issueEventOpts = (gh.issues.listEventsForRepo as any).endpoint.merge({
-							...params
 						}),
+            // issueEventOpts = (gh.issues.listEventsForRepo as any).endpoint.merge({
+						// 	...params
+						// }),
             collabOpts = (gh.repos.listCollaborators as any).endpoint.merge({
               ...params,
 							affiliation: "all"
@@ -109,63 +107,36 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
           const milestones = await getMilestones(repo)
           await db.milestones.bulkPut(milestones)
 
+          // SYNC REPO Collaborators
+          if (getValue(() => repo.permissions.push,false)) {
+            const repoCollabs = Array<ICollaborator>()
+            for await (const response of ((gh as any).paginate.iterator(collabOpts))) {
+              const collabs: Array<ICollaborator> = await Promise.all(response.data.map(async (collab: ICollaborator): Promise<ICollaborator> => ({
+                ...collab,
+                repository_url: repo.url,
+              }))) as any
+
+              repoCollabs.push(...collabs)
+              // if (collabs.some(event => moment(event.created_at).valueOf() < timestamp))
+              //   break
+
+              await delay(10)
+            }
+
+            await db.collaborators.bulkPut(repoCollabs)
+          }
+
 					// SYNC ISSUES
 					const repoIssues = Array<IIssue>()
 					for await (const response of ((gh as any).paginate.iterator(issueOpts))) {
 						repoIssues.push(...response.data)
-						await delay(10)
+
+						const maxUpdatedAt = Math.max(...response.data.map(issue => moment(issue.updated_at).valueOf()))
+						timestampCache.set(timestampId, maxUpdatedAt)
+						await this.table.bulkPut(response.data)
 					}
 
-          await this.table.bulkPut(repoIssues)
 
-					// SYNC COMMENTS
-          const repoComments = Array<IComment>()
-          for await (const response of ((gh as any).paginate.iterator(commentOpts))) {
-            const comments:Array<IComment> = await Promise.all(response.data.map(async (comment:IComment):Promise<IComment> => ({
-							...comment,
-							issue_id:await findIssueIdFromComment(repo, comment)
-            }))) as any
-
-          	repoComments.push(...comments)
-            await delay(10)
-          }
-
-					await db.comments.bulkPut(repoComments)
-
-          // SYNC ISSUE EVENTS
-          const repoIssueEvents = Array<IIssueEvent>()
-          for await (const response of ((gh as any).paginate.iterator(issueEventOpts))) {
-            const events:Array<IIssueEvent> = await Promise.all(response.data.map(async (event:IIssueEvent):Promise<IIssueEvent> => ({
-							...event,
-							issue_id: getValue(() => event.issue.id, null),
-							repo_id: getValue(() => event.repo.id, null)
-						}))) as any
-
-            repoIssueEvents.push(...events)
-            if (events.some(event => moment(event.created_at).valueOf() < timestamp))
-            	break
-
-						await delay(10)
-          }
-
-          await db.issueEvents.bulkPut(repoIssueEvents)
-
-          // SYNC REPO Collaborators
-          const repoCollabs = Array<ICollaborator>()
-          for await (const response of ((gh as any).paginate.iterator(collabOpts))) {
-            const collabs:Array<ICollaborator> = await Promise.all(response.data.map(async (collab:ICollaborator):Promise<ICollaborator> => ({
-              ...collab,
-              repository_url: repo.url,
-            }))) as any
-
-            repoCollabs.push(...collabs)
-            // if (collabs.some(event => moment(event.created_at).valueOf() < timestamp))
-            //   break
-
-            await delay(10)
-          }
-
-          await db.collaborators.bulkPut(repoCollabs)
 
 					EventHub.emit("RepoIssuesSynced",repo.id,syncedAt)
 					issues.push(...repoIssues)

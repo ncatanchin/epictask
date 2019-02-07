@@ -18,12 +18,14 @@ export enum Events {
 	AuthError,
 	ConfigChanged,
 	RepoIssuesSynced,
+  ReposUpdated,
 	WindowClosed,
 	AcceleratorsChanged,
 	CommandsChanged,
 	ChildStoreAction,
 	ServerStoreAction,
-  NotificationsSynced
+  NotificationsSynced,
+  SyncAllData
 }
 
 export type EventNames = keyof typeof Events
@@ -56,6 +58,8 @@ class EventHubEmitter {
 	on(event:"RepoIssuesSynced", listener: (repoId:number,timestamp:number) => void):() => void
 	on(event:"WindowClosed", listener: () => void):() => void
 	on(event:"CommandsChanged", listener: () => void):() => void
+  on(event:"SyncAllData", listener: () => void):() => void
+  on(event:"ReposUpdated", listener: () => void):() => void
 	on(event:"AcceleratorsChanged", listener: () => void):() => void
 	on(event:"ChildStoreAction" | "ServerStoreAction",listener: (actionMessage:ISyncActionMessage) => void):() => void
 	on(event:EventNames, listener:(...args:any[]) => void):() => void {
@@ -75,6 +79,8 @@ class EventHubEmitter {
 	emit(event:"RepoIssuesSynced", repoId:number,timestamp:number)
 	emit(event:"WindowClosed")
 	emit(event:"CommandsChanged")
+  emit(event:"SyncAllData")
+  emit(event:"ReposUpdated")
 	emit(event:"AcceleratorsChanged",accelerators:StringMap<string>)
 	emit(event:"ChildStoreAction" | "ServerStoreAction",actionMessage:ISyncActionMessage)
 	emit(event:EventNames, ...args:any[]) {

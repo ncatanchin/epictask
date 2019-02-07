@@ -108,4 +108,10 @@ export class UIActionFactory extends ActionFactory<UIState, ActionMessage<UIStat
     })
   }
 
+
+  @ActionReducer()
+  setState(newState:UIState) {
+    return (state: UIState) => newState
+  }
+
 }

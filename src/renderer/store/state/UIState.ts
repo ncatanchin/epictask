@@ -14,11 +14,12 @@ export class UIState implements State<string> {
 
   static Key = 'UIState'
 
+  static fromJS(o:any = {}):UIState {
+    return new UIState(o)
+  }
+
   type = UIState.Key
 
-  constructor(o: any = {}) {
-    Object.assign(this, o)
-  }
 
   issueViewController:IssueViewController | null = null
 
@@ -34,6 +35,11 @@ export class UIState implements State<string> {
   searches: {
     [id:string]: Array<ISearchChipData>
   } = {}
+
+
+  constructor(o: any = {}) {
+    Object.assign(this, o)
+  }
 
   /**
    * To plain JS object

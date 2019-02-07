@@ -5,7 +5,7 @@
 import {isRenderer} from "common/Process"
 
 export default function addDevMiddleware(enhancers):void {
-  if (isRenderer() && typeof window !== 'undefined' && window.devToolsExtension) {
-    enhancers.push(window.devToolsExtension())
-  }
+  // if (isRenderer() && typeof window !== 'undefined' && window.devToolsExtension) {
+  //   enhancers.push(window.devToolsExtension())
+  // }
 }

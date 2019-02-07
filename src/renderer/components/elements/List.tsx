@@ -20,6 +20,14 @@ import {ICommandManagerOptions} from "common/command-manager"
 
 const log = getLogger(__filename)
 
+declare global {
+  type ListItemColor = "bg" |
+    "accessory" |
+    "text" |
+    "subtext" |
+    "boxShadow" |
+    "dividerBoxShadow"
+}
 
 function baseStyles(theme): any {
   const
@@ -64,13 +72,14 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
       onSelectedIndexesChanged,
       rowRenderer: finalRowRenderer,
       rowHeight,
+      tabIndex = -1,
       ...other
     } = props
   assert(isDefined(id), "ID must be provided")
   const
-    // [internalSelectedIndexes,setInternalSelectedIndexes] = useState<Array<number>>(selectedIndexes || Array<number>()),
-    // internalSelectedIndexesRef = useRef<Array<number>>(internalSelectedIndexes),
     moveSelectionRef = useRef<(increment: number,shiftHeld?: boolean) => void>(null),
+    selectAllRef = useRef<() => void>(null),
+    deselectAllRef = useRef<() => void>(null),
     dataSetRef = useRef<IDataSet<T>>(dataSet),
     selectedIndexesContextRef = useRef<React.Context<Array<number>>>(React.createContext(selectedIndexes)),
     selectedIndexesContext = selectedIndexesContextRef.current
@@ -106,26 +115,14 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
   }, [dataSetRef.current, selectedIndexes,onSelectedIndexesChanged])
 
   /**
-   * Select all items in the list
-   */
-  function selectAll(): void {
-    setSelectedIndexes(_.range(0, dataSetRef.current.total))
-  }
-
-  /**
-   * Select all items in the list
-   */
-  function deselectAll(): void {
-    setSelectedIndexes([])
-  }
-
-  /**
    * Move the selection block
    *
    * @param increment
    * @param shiftHeld
    */
   useEffect(() => {
+    selectAllRef.current = () => setSelectedIndexes(_.range(0, dataSetRef.current.total))
+    deselectAllRef.current = () => setSelectedIndexes([])
     moveSelectionRef.current = (increment: number, shiftHeld: boolean = false): void => {
       const
         dataSet = dataSetRef.current,
@@ -147,11 +144,11 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
 
       guard(() => listRef.current && listRef.current.scrollToRow(dest))
     }
-  }, [dataSetRef.current, selectedIndexes, listRef.current])
+  }, [dataSetRef.current, selectedIndexes, listRef.current, setSelectedIndexes])
 
   const makeMoveSelection = useCallback((increment: number, shiftHeld: boolean = false): (() => void) => {
     return () => moveSelectionRef.current(increment, shiftHeld)
-  }, [moveSelectionRef.current])
+  }, [])
 
   /**
    * On appropriate changes, update registered commands
@@ -161,10 +158,10 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
     commandBuilder = useCallback(builder => {
       if (selectable)
         builder
-          .command("CommandOrControl+a", selectAll, {
+          .command("CommandOrControl+a", () => selectAllRef.current(), {
             overrideInput: false
           })
-          .command("Escape", deselectAll)
+          .command("Escape", () => deselectAllRef.current())
           .command("Shift+ArrowDown", makeMoveSelection(1, true), {
             overrideInput: false
           })
@@ -178,7 +175,7 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
             overrideInput: false
           })
       return builder.make()
-    },[selectable,makeMoveSelection,selectAll]),
+    },[selectable]),
     {
       props: commandManagerProps
     } = useCommandManager(id, commandBuilder, rootRef, commandManagerOptions)
@@ -194,7 +191,7 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
       dataSet,
       selectedIndexesContext,
       onClick: (event: React.MouseEvent) => {
-        log.info("On list item clicked")
+        //log.info("On list item clicked")
         let newSelectedIndexes = [...selectedIndexes]
 
         const
@@ -231,8 +228,7 @@ export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props:
           ref={listRef}
           height={height}
           width={width}
-          tabIndex={-1}
-
+          tabIndex={tabIndex}
           rowCount={dataSet.total}
           rowHeight={rowHeight}
           rowRenderer={rowRenderer}

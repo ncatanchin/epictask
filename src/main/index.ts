@@ -19,9 +19,25 @@ const log = getLogger(__filename)
 
 log.info("Starting")
 
-process.on('uncaughtException', function (err) {
-  console.log("Uncaught", err);
-});
+function onException (err):void {
+  console.error("Exception", err);
+}
+
+
+function onError (err):void {
+  console.error("Uncaught", err);
+}
+
+function onRejection (err):void {
+  console.error("Rejection", err);
+}
+
+
+process.on('uncaughtException', onException)
+process.on('unhandledRejection', onRejection)
+// process.on('uncaughtException', function (err) {
+//   console.log("Uncaught", err);
+// })
 
 // const jsdom = require("jsdom")
 // const { JSDOM } = jsdom
@@ -30,7 +46,7 @@ process.on('uncaughtException', function (err) {
 //Object.assign(global,{window:{webpackJsonp: []}})
 
 // DISABLE WEB-SECURITY
-app.commandLine.appendSwitch('disable-web-security')
+//app.commandLine.appendSwitch('disable-web-security')
 
 async function checkAuthenticated():Promise<void> {
 	log.info(`Checking authentication: ${Auth.isAuthenticated()}`)

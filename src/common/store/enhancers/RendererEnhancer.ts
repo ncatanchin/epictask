@@ -17,13 +17,12 @@ const
   {nextTick} = process
 
 export const sendStoreAction:((handler:IActionMessageHandler<any, any>) => IActionMessageHandler<any, any>) = ActionMessageFilter((action:ActionMessage<any>) => {
-  //log.info("Sending",action)
   action = Object.assign(_.clone(action), {
     windowId: getWindowId(),
     fromChildId: id,
     stateType: null
   })
-  
+
   EventHub.emit("ChildStoreAction", action as ISyncActionMessage)
 })
 
@@ -34,7 +33,7 @@ export const sendStoreAction:((handler:IActionMessageHandler<any, any>) => IActi
  */
 function pushStoreAction(...actions):void {
   const store = getValue(() => getReduxStore())
-  
+
   actions.forEach(action => store.dispatch(action))
 }
 
@@ -50,48 +49,47 @@ function appStoreEnhancer(storeCreator):StoreEnhancerStoreCreator {
     const
       store = storeCreator(reducer, initialState),
       storeDotDispatch = store.dispatch
-    
+
     EventHub.on("ServerStoreAction", action => {
-      //log.info("ServerStoreAction",action)
       const
         {fromChildId, fromWindowId, windowId} = action,
         ids = [fromChildId, fromWindowId, windowId],
         isNewAction = !ids.includes(id) && !ids.includes(getWindowId())
-      
+
       if (!isNewAction) {
         log.debug(`I sent this so no need to dispatch again`)
         return
       }
-      
+
       pushStoreAction(action)
     })
-    
+
     // OVERRIDE DISPATCH - CHECK STATE AFTER ACTION
     store.dispatch = (action) => {
       const
         {fromServer, fromChildId} = action,
         state = store.getState()
-      
+
       if (fromChildId === id)
         return
-      
+
       nextTick(() => {
         storeDotDispatch(action)
-        
+
         const
           newState = store.getState()
-        
+
         // IF CHANGED - SEND TO CHILDREN
         if (AppStoreSyncKeys.includes(action.leaf) && !fromServer && state !== newState) {
-          
+
           // If it's a reducer then process it, otherwise - wait for server
           // to process the action and send data
           nextTick(() => sendStoreAction(action))
-          
+
         }
       })
-      
-      
+
+
     }
     return store
   }

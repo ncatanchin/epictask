@@ -27,18 +27,10 @@ export function getLogger(name:string):TypeLogger.ILogger {
 	name = name.split('/').pop()!
 	return LogLevelNames.reduce((logger:TypeLogger.ILogger,level) => {
 		logger[level as any] = (...args:any[]) => {
-			// const msgLevel = (LogLevel as any)[level as any] as LogLevel
-			// if (msgLevel < Threshold)
-			// 	return
+			const msgLevel = (LogLevel as any)[level as any] as LogLevel
+			if (msgLevel < Threshold)
+				return
 
-			// if (isDefined(getStoreState) && [LogLevel.info,LogLevel.error,LogLevel.warn].includes(msgLevel)) {
-			//   const
-			//     error = args.filter((arg:any) => arg instanceof Error),
-			//     message = args.filter((arg:any) => !(arg instanceof Error)).join(" ")
-			//
-			//   //LogFirehose.log(msgLevel,name,message,error.length ? error[0] : null)
-			//
-			// }
 
 			//baseLogger[level](name,...args)
 			if (console[level as any]) {

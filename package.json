@@ -30,6 +30,7 @@
     "electron-devtools-installer": "^2.2.4",
     "electron-updater": "^4.0.4",
     "electron-window-state": "^5.0.2",
+    "fuzzy-search": "^3.0.1",
     "highlight.js": "^9.13.1",
     "history": "^4.7.2",
     "jquery": "^3.3.1",

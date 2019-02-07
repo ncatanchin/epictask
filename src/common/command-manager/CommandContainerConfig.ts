@@ -12,5 +12,6 @@ export const ContainerNames = {
 	IssueEditDialog: 'IssueEditDialog',
 	Header: 'Header',
 	SheetRoot: 'SheetRoot',
-	RepoPanel: 'RepoPanel'
+	RepoPanel: 'RepoPanel',
+	RepoImportResultsList: 'RepoImportResultsList'
 }

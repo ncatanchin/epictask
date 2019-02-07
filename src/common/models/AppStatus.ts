@@ -1,5 +1,6 @@
 import * as React from "react"
 import Deferred from "common/Deferred"
+import {isFunction, isString} from "typeguard"
 
 export interface IAppStatusProps {
   message?: IAppStatusMessage | null
@@ -8,6 +9,10 @@ export interface IAppStatusProps {
 }
 
 export type AppStatusMessageContent = string | React.ReactNode | ((props:IAppStatusProps) => React.ReactElement<IAppStatusProps>)
+
+export function isAppStatusMessageContent(o:any):o is AppStatusMessageContent {
+  return isFunction(o) || isString(o)
+}
 
 export enum AppStatusMessageType {
   Info,

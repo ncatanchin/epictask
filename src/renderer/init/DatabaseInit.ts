@@ -7,7 +7,7 @@ export async function init():Promise<void> {
 	log.info("Init DB")
 	const db = (require("../db/ObjectDatabase")).default
 	await db.open()
-	await navigator.storage.persist()
+	//await navigator.storage.persist()
 
 	;(await (require("../db/OrgObjectManager")).default()).start()
 	;(await (require("../db/RepoObjectManager")).default()).start()

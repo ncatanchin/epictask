@@ -11,6 +11,8 @@ import {IActionFactoryBaseConstructor} from "common/store/actions/ActionFactoryB
 // import {DataActionFactory} from "common/store/actions/DataActionFactory"
 import {isMain} from "common/Process"
 import * as Electron from "electron"
+import UIState from "renderer/store/state/UIState"
+import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
 
 const
 	log = getLogger(__filename),
@@ -90,7 +92,7 @@ function setupIPC():void {
 }
 
 
-function setupRendererLeafPersistence<S extends State<string>>(
+function setupRendererSyncLeaf<S extends State<string>>(
 	factoryConstructor:IActionFactoryBaseConstructor<S>,
 	stateConstructor:IStateConstructor<string,S>
 ):void {
@@ -98,16 +100,70 @@ function setupRendererLeafPersistence<S extends State<string>>(
 	new factoryConstructor().setState(leafState)
 }
 
+function setupRendererPersistenceLeaf<S extends State<string>>(
+  factoryConstructor:IActionFactoryBaseConstructor<S>,
+  stateConstructor:IStateConstructor<string,S>
+):void {
+  //const leafState = stateConstructor.fromJS(Electron.ipcRenderer.sendSync("GetSyncStoreState",stateConstructor.Key)) as S
+  const leafState = stateConstructor.fromJS(
+  	JSON.parse(
+  		localStorage.getItem(stateConstructor.Key) || "{}"
+		)
+	) as S
+
+  new factoryConstructor().setState(leafState)
+
+  // SAVING FLAG
+  let saving = false
+
+  /**
+   * Save the state
+   *
+   * @param state
+   */
+  async function saveState(state:S):Promise<void> {
+    saving = true
+    try {
+      const
+        stateJS = isFunction(state.toJS) ? state.toJS() : state,
+        persistState = JSON.stringify(stateJS)
+
+      localStorage.setItem(stateConstructor.Key,persistState)
+    } catch (err) {
+      log.error("Unable to save renderer state", err)
+    } finally {
+      saving = false
+    }
+  }
+
+  // REFERENCE THE SAVE STATE FUNC
+  let scheduleSaveState: (state:S) => void
+
+  // eslint-disable-next-line
+  scheduleSaveState = _.debounce((state:S) => {
+    if (saving) {
+      scheduleSaveState(getRendererStoreState()[stateConstructor.Key])
+      return
+    }
+
+    saveState(state)
+      .catch(err => log.error("Unable to save state", err))
+  }, 500)
+
+  // ATTACH OBSERVER
+  getStore().observe(stateConstructor.Key,scheduleSaveState)
+
+}
+
 
 // SETUP PERSISTENCE FOR ALL NODES
 async function init():Promise<void> {
 	if (process.env.isMainProcess) {
 		setupMainLeafPersistence(AppActionFactory, AppState)
-		//setupMainLeafPersistence(DataActionFactory, DataState)
 		setupIPC()
 	} else {
-		setupRendererLeafPersistence(AppActionFactory, AppState)
-		//setupRendererLeafPersistence(DataActionFactory, DataState)
+		setupRendererSyncLeaf(AppActionFactory, AppState)
+    setupRendererPersistenceLeaf(UIActionFactory, UIState)
 	}
 }
 

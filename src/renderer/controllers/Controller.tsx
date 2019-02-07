@@ -20,74 +20,8 @@ export default abstract class Controller {
   }
 }
 
-//, newControllerCallback:((newController:C) => void) | null = null
-// export function makeController<C extends Controller>(controllerSrc:C):C {
-//   let controller:C = controllerSrc
-//   log.info("New controller", controller)
-//   const fnCache = {} as any
-//
-//   return new Proxy({} as any,{
-//     get: function(o,prop:string):any {
-//       //log.info("Get prop", prop)
-//       if (isString(prop) && prop.startsWith("set") && isFunction(o[prop])) {
-//         return (...args) => {
-//           controller = o = o.clone()
-//           controller = o = (o[prop] as Function).apply(o, args)
-//
-//           // if (newControllerCallback)
-//           //   newControllerCallback(makeController(controller,newControllerCallback))
-//           return makeController(o)
-//           // if (!fnCache[prop]) {
-//           //   fnCache[prop] =
-//           //   }
-//           // }
-//           // return fnCache[prop]
-//         }
-//       } else {
-//         return controller[prop]
-//       }
-//     }
-//   })
-// }
-
 export type ControllerProviderState<C extends Controller = any> = [(C | null),((controllerUpdate:C) => void)]
 export const ControllerContext = React.createContext<ControllerProviderState>(null)
-
-// export function useControllerProvider<C extends Controller>(factory:() => C,changeSet:any[]):ControllerProviderState<C> {
-//   const
-//     //controllerRef = useRef<C | null>(null),
-//     controllerFactory = useCallback(() => {
-//       const newController = factory()
-//       return newController ? makeController(newController) : null
-//     },changeSet),
-//     [controller,setController] = useState<C|null>(controllerFactory)
-//     // updateController = useCallback((controllerUpdate:C) => {
-//     //   setController(controllerUpdate)
-//     //   //controllerRef.current = controllerUpdate
-//     // },[setController])
-//
-//
-//   useEffect(() => {
-//     //if (!controller) {
-//       const newController = controllerFactory()
-//       if (newController) setController(newController)
-//     //}
-//   },changeSet)
-//
-//
-//   //useDebugValue(() => controllerRef.current)
-//   // useEffect(() => {
-//   //   if (!controller) {
-//   //     const innerController = factory()
-//   //     if (innerController) {
-//   //       controller = makeController(innerController, newController => setController(newController))
-//   //       setController(controller)
-//   //     }
-//   //   }
-//   // }, [factory,setController])
-//
-//   return [controller, setController]
-// }
 
 
 export function useController<C extends Controller>():[C,(controllerUpdate:C | ((oldController:C) => C)) => void] | null {

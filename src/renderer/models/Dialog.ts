@@ -17,7 +17,7 @@ export type DialogVariant = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
 export interface IDialog<T = any, D = any, C extends Controller = any> {
   id: string
   deferred: Deferred<T>
-  type: "Confirm" | "IssueEdit" | "IssueCreate"
+  type: "Confirm" | "IssueEdit" | "IssueCreate" | "RepoImport"
   variant?: DialogVariant
   title: DialogElement<T, D,C>
   content: DialogElement<T, D,C>

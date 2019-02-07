@@ -1,17 +1,16 @@
 import * as React from "react"
+import {useCallback, useRef, useState} from "react"
 import getLogger from "common/log/Logger"
 import {
+  Fill,
   IThemedProperties,
-  StyleDeclaration,
-  withStatefulStyles,
-  NestedStyles,
-  mergeClasses, Fill, PositionRelative, makeTransition, PositionAbsolute
+  makeTransition,
+  mergeClasses,
+  PositionAbsolute,
+  PositionRelative,
+  StyleDeclaration
 } from "renderer/styles/ThemedStyles"
-import {createStructuredSelector} from "reselect"
-import {connect} from "common/util/ReduxConnect"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
-import {useCallback, useRef, useState} from "react"
-import {useFocused} from "renderer/command-manager-ui"
 import {guard} from "typeguard"
 
 const log = getLogger(__filename)

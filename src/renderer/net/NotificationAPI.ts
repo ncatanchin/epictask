@@ -5,6 +5,9 @@ import {INotification, NotificationReason, NotificationType} from "common/models
 import {getValue} from "typeguard"
 import {IconType, IIcon} from "common/models/Icon"
 import * as moment from "moment"
+import db from "renderer/db/ObjectDatabase"
+import {AppActionFactory} from "common/store/actions/AppActionFactory"
+import delay from "common/util/Delay"
 
 const log = getLogger(__filename)
 
@@ -57,4 +60,23 @@ export async function getNotifications(since:number):Promise<Array<INotification
   }
 
   return notifications
+}
+
+
+export async function selectNotification(notification:INotification):Promise<void> {
+  const
+    {payload,repo_id} = notification,
+    repo = repo_id ? (await db.repos.get(repo_id)) : null,
+    url = getValue(() => (payload as any).subject.url,null),
+    issue = url ? (await db.issues.where("url").equals(url).toArray())[0] : null
+
+  log.info("Selected notification",notification,"on issue", issue, "url",url)
+  if (issue) {
+    const appActions = new AppActionFactory()
+    appActions.setSelectedRepo(repo)
+    await delay(100)
+    appActions.setSelectedIssueIds([issue.id])
+  } else {
+    log.warn("Can not handle notification", notification)
+  }
 }

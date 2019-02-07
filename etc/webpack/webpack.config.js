@@ -21,15 +21,15 @@ function makeConfig(isMain) {
    */
   function makeExternals() {
     const whitelist = [
-      /webpack/,
+      /webpack-hot/,
       /codemirror/,
       /highlight\.js/,
       /octokit/,
-      /hot-loader/,
+      // /hot-loader/,
       /node-fetch/,
       // /react/,
       // /babel/,
-      /react-hot/,
+      // /react-hot/,
       // /hot-loader/,
       //"react-dom/,
       /material-ui/

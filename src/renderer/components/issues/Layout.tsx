@@ -52,6 +52,8 @@ import * as $ from 'jquery'
 import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
 import classNames from "classnames"
 import NotificationList from "renderer/components/elements/NotificationList"
+import {showRepoImportDialog} from "renderer/components/elements/RepoImportDialog"
+import EventHub from "common/events/Event"
 
 const AvatarDefaultURL = require("renderer/assets/images/avatar-default.png")
 
@@ -189,6 +191,18 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
 
         return builder
           .command(
+            "F5",
+            (cmd, event) => guard(() => {
+              EventHub.emit("SyncAllData")
+            }),
+            {
+              name: "Sync data with Github",
+              type: CommandType.App,
+              hidden: false,
+              overrideInput: true
+            }
+          )
+          .command(
             "CommandOrControl+o",
             (cmd, event) => guard(() => {
               const
@@ -199,6 +213,19 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
 
               inputElement.focus()
               inputElement.setAttribute("value", "")
+            }),
+            {
+              name: "Import repo",
+              type: CommandType.App,
+              hidden: false,
+              overrideInput: true
+            }
+          )
+          .command(
+            "CommandOrControl+i",
+            (cmd, event) => guard(() => {
+              if (areDialogsOpen()) return
+              showRepoImportDialog()
             }),
             {
               name: "Open repo",
@@ -271,8 +298,13 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
 
   const rightControls = useMemo(() =>
     <div className={mergeClasses(classes.controls, repoSelectOpen && "open")}>
-      <RepoSelect id={CommonElementIds.RepoSelect} selectRef={repoSelectRef} onOpen={onRepoSelectOpen}
-                  onSelection={onRepoSelection} value={repo}/>
+      <RepoSelect
+        id={CommonElementIds.RepoSelect}
+        selectRef={repoSelectRef}
+        onOpen={onRepoSelectOpen}
+        onSelection={onRepoSelection}
+        value={repo}
+      />
       <Img
         src={getValue(() => user.avatar_url)}
         loader={<img src={AvatarDefaultURL}/>}
@@ -335,7 +367,7 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
     <div className={classes.container}>
       <VerticalSplitPane
 
-        defaultSize={notificationsOpen ? notificationsSplitter : 0}
+        defaultSize={notificationsSplitter}
         primary="second"
 
         minSize={notificationsOpen ? 300 : 0}

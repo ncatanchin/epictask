@@ -35,10 +35,11 @@ import CommonElementIds from "renderer/CommonElements"
 import IssueEditController from "renderer/controllers/IssueEditController"
 import {useController} from "renderer/controllers/Controller"
 import {uiTask} from "renderer/util/UIHelper"
+import {formBaseStyles, FormClasses} from "renderer/components/elements/Form.styles"
 
 const log = getLogger(__filename)
 
-type Classes = "root" | "title" | "labels"
+type Classes = FormClasses | "labels"
 
 function baseStyles(theme: Theme): StyleDeclaration<Classes> {
   const
@@ -46,38 +47,12 @@ function baseStyles(theme: Theme): StyleDeclaration<Classes> {
     {primary, secondary} = palette
 
   return {
-    root: [FlexScale,FlexColumn, FillWidth, PositionRelative, {
-      "& > .controls": [FlexRowCenter, makePaddingRem(1),{
-        "& > .note": [FlexScale, Ellipsis,makePaddingRem(0,1,0,0)],
-        "& > .buttons": [{
-          "& > .button": [{
-            "& .iconLeft": [{
-              marginRight: theme.spacing.unit
-            }],
-            "& .iconSmall": [{
-              fontSize: rem(1.6)
-            }]
-          }]
-        }]
-      }],
-      "& > .row": [FlexAuto, FlexRowCenter, PositionRelative,FillWidth,{
-        //maxHeight: rem(8),
-        "&.body": [FlexScale, FlexColumn,PositionRelative,{
-          //maxHeight: "30vh",
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          "& .body, & .CodeMirror": [FlexScale, FillWidth, Fill, PositionRelative, {
-            //fontSize: rem(2)
-          }],
-        }],
-
-        "&.padding": [makePaddingRem(1, 0)],
-        "& .collaborators": [FlexAuto],
-        "& .milestone": [FlexAuto, makePaddingRem(0, 1, 0, 0)]
-      }]
-    }],
-    title: [FlexScale,FlexRow,FillWidth],
-    labels: [FlexScale, PositionRelative, makePaddingRem(0, 1, 0, 0)],
+    ...formBaseStyles(theme),
+    labels: {
+      ...FlexScale,
+      ...PositionRelative,
+      ...makePaddingRem(0, 1, 0, 0)
+    }
 
   }
 }
@@ -105,32 +80,32 @@ const selectors = {
 
 export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(props: P & SP): React.ReactElement<P & SP> {
   const
-    {id = CommonElementIds.IssueEditForm, classes, onClose, issue, repo, labels, milestones, collaborators, data,...other} = props,
-    [controller,updateController] = useController<IssueEditController>(),
+    {id = CommonElementIds.IssueEditForm, classes, onClose, issue, repo, labels, milestones, collaborators, data, ...other} = props,
+    [controller, updateController] = useController<IssueEditController>(),
     setIssuePatch = useCallback(
-      (patchFn:((patch:Partial<IssuesUpdateParams>) => Partial<IssuesUpdateParams>)) => {
+      (patchFn: ((patch: Partial<IssuesUpdateParams>) => Partial<IssuesUpdateParams>)) => {
         updateController(oldController => {
           const newController = oldController.setPatch(patchFn)
           log.info("Patching issue on controller", controller, oldController, newController)
           return newController
         })
       }
-      ,[controller,updateController]),
-    defaultBody = useMemo<string>(() => controller && controller.defaultBody,[controller]),
+      , [controller, updateController]),
+    defaultBody = useMemo<string>(() => controller && controller.defaultBody, [controller]),
     issuePatch = controller.patch,
-    isDirty = useMemo<boolean>(() => controller && !_.isEqual(controller.defaultPatch, issuePatch),[controller]),
+    isDirty = useMemo<boolean>(() => controller && !_.isEqual(controller.defaultPatch, issuePatch), [controller]),
     makeSelectedLabels = useCallback(
       (): Array<ILabel> =>
         getValue(() =>
           issuePatch.labels
             .map(name => labels.data.find(label => label.name === name))
             .filter(label => !!label), [])
-    ,[controller]),
+      , [controller]),
     [selectedLabels, setSelectedLabels] = useState<Array<ILabel>>(makeSelectedLabels()),
     isEdit = !!issue && (issue.id > 0),
     formRef = useRef<HTMLFormElement | null>(null)
-    // ,
-    // {props:commandManagerProps} = useCommandManager(id,builder => builder.make(),formRef,{autoFocus: makeCommandManagerAutoFocus(100)})
+  // ,
+  // {props:commandManagerProps} = useCommandManager(id,builder => builder.make(),formRef,{autoFocus: makeCommandManagerAutoFocus(100)})
 
   const
     onBodyChanged = useCallback((body: string): void => {
@@ -165,11 +140,11 @@ export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(
       guard(() => onClose())
     }, []),
     onSave = useCallback((): Promise<void> =>
-      uiTask("Saving Issue", async () => {
-        await controller.onSave(repo)
-        guard(() => onClose())
-      })
-    , [repo,defaultBody, issuePatch, controller])
+        uiTask("Saving Issue", async () => {
+          await controller.onSave(repo)
+          guard(() => onClose())
+        })
+      , [repo, defaultBody, issuePatch, controller])
 
 
   return controller && issuePatch && <form id={id} ref={formRef} className={classes.root} onSubmit={onSave} {...other}>
@@ -180,7 +155,7 @@ export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(
         onChange={onTitleChanged}
         placeholder="Issue title"
         classes={{
-          root: classes.title,
+          root: classes.title
           // inputRoot: classes.titleInputRoot,
           // input: classes.titleInput
         }}
@@ -217,17 +192,17 @@ export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(
       />
     </div>
     {/*<div className="row controls">*/}
-      {/*<div className="note">{dirty ? "Unsaved changes" : "No changes"}</div>*/}
-      {/*<div className="buttons">*/}
-        {/*<Button variant="text" size="small" className="button" onClick={onCancel}>*/}
-          {/*<CancelIcon className={mergeClasses("iconLeft", "iconSmall")}/>*/}
-          {/*Cancel*/}
-        {/*</Button>*/}
-        {/*<Button variant="contained" size="small" className="button" disabled={!dirty} onClick={onSave}>*/}
-          {/*<SaveIcon className={mergeClasses("iconLeft", "iconSmall")}/>*/}
-          {/*Save*/}
-        {/*</Button>*/}
-      {/*</div>*/}
+    {/*<div className="note">{dirty ? "Unsaved changes" : "No changes"}</div>*/}
+    {/*<div className="buttons">*/}
+    {/*<Button variant="text" size="small" className="button" onClick={onCancel}>*/}
+    {/*<CancelIcon className={mergeClasses("iconLeft", "iconSmall")}/>*/}
+    {/*Cancel*/}
+    {/*</Button>*/}
+    {/*<Button variant="contained" size="small" className="button" disabled={!dirty} onClick={onSave}>*/}
+    {/*<SaveIcon className={mergeClasses("iconLeft", "iconSmall")}/>*/}
+    {/*Save*/}
+    {/*</Button>*/}
+    {/*</div>*/}
     {/*</div>*/}
   </form>
 })

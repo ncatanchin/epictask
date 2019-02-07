@@ -34,3 +34,7 @@ export interface ISyncActionMessage extends ActionMessage<any> {
 export const AppStoreSyncKeys:Array<AppStoreLeafKey> = [
   "AppState"
 ]
+
+export const AppStoreLocalStoreKeys:Array<AppStoreLeafKey> = [
+  "UIState"
+]

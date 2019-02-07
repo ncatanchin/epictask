@@ -4,7 +4,7 @@ import {
   AppStatusMessageContent,
   AppStatusMessageType, AppStatusNotificationDurations,
   IAppStatusMessage,
-  IAppStatusNotification, IAppStatusNotificationAction, IAppStatusWork
+  IAppStatusNotification, IAppStatusNotificationAction, IAppStatusWork, isAppStatusMessageContent
 } from "common/models/AppStatus"
 import {AppActionFactory} from "common/store/actions/AppActionFactory"
 import {shortId} from "common/IdUtil"
@@ -12,6 +12,34 @@ import Deferred from "common/Deferred"
 
 export function pushStatusMessage(msg:IAppStatusMessage):void {
   new AppActionFactory().updateAppStatusMessage(msg)
+}
+
+
+export function setStatusMessage(msg:IAppStatusMessage)
+export function setStatusMessage(
+  content:AppStatusMessageContent,
+  type?:AppStatusMessageType,
+  notificationId?:string
+)
+
+/**
+ * Update/set global status message
+ *
+ * @param content
+ * @param typeOrNull
+ * @param notificationIdOrNull
+ */
+export function setStatusMessage(
+  content:AppStatusMessageContent,
+  typeOrNull:AppStatusMessageType | null = AppStatusMessageType.Info,
+  notificationIdOrNull:string | null = null
+):void {
+
+  const msg = (isAppStatusMessageContent(content)) ?
+    makeStatusMessage(content,typeOrNull,notificationIdOrNull) :
+    content
+
+  pushStatusMessage(msg)
 }
 
 export function removeStatusMessage(msg:IAppStatusMessage):void {

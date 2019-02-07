@@ -142,24 +142,21 @@ export default StyledComponent<P,SP>(baseStyles,{
     </Consumer>
 
 
-  },[selectedIssueIds])
+  },[])
 
 
 
   const
+
     updateSelectedIssues = useCallback(async (dataSet: IDataSet<IIssue>,indexes:Array<number>):Promise<void> => {
       const
         {data} = dataSet,
         ids = indexes.map(index => getValue(() => data[index].id)).filter(id => !!id)
-
-
       new AppActionFactory().setSelectedIssueIds(ids)
     },[controller]),
-    //[searchChips, setSearchChips] = useState<Array<ISearchChip<IIssue,number,any>>>([]),
+
     onSearchChipsChanged = useCallback((newSearchChips:Array<ISearchChip<IIssue,number,any>>) => {
-      log.info("New search chips", newSearchChips)
       new UIActionFactory().updateSearch(searchIssuesKey,newSearchChips)
-      //setSearchChips(newSearchChips)
     },[])
 
   return <FocusedDiv classes={{root:classes.root}}>

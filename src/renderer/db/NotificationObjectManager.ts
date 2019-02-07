@@ -70,7 +70,7 @@ class NotificationObjectManager extends ObjectManager<INotification, string> {
 			log.info(`Updated ${notifications.length} notifications`)
       pushStatusMessage(makeStatusMessage("Synchronized"))
 
-			this.emit(ObjectEvent.Synced, syncedAt, notifications)
+			this.emit(ObjectEvent.Synced, syncedAt)
 			return true
 		} catch (err) {
 			log.error("Unable to sync Notifications", err)

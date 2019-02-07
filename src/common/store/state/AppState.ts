@@ -4,14 +4,9 @@ import {getConfig} from "common/config/ConfigHelper"
 import {IUser} from "common/models/User"
 import {IAcceleratorMap} from "common/models/CommandTypes"
 import {IDataSyncStatus} from "common/Types"
-import {IIssue} from "common/models/Issue"
 import {IAppStatus, makeDefaultAppStatus} from "common/models/AppStatus"
 
 
-export interface IIssueEdit {
-  issue: IIssue | null
-  open: boolean
-}
 
 export class AppState implements State<string> {
 	static Key = "AppState"

@@ -559,7 +559,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
       return
     }
     const
-      containers = this.focusedContainers(),
+      containers = this.focusedContainers().filter(container => !this.stack.includes(container)),
       customAccelerators = getValue(() => this.acceleratorDataSource(), {} as StringMap<string>),
       isInputTarget =
         (event.target && InputTagNames.includes((event.target as HTMLElement).tagName)) ||

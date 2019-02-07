@@ -11,16 +11,20 @@ import {selectedRepoSelector} from "common/store/selectors/DataSelectors"
 import getPersonalOrg from "common/models/PersonalOrg"
 import {AppState} from "common/store/state/AppState"
 import {DataState} from "common/store/state/DataState"
-import {IIssue} from "common/models/Issue"
+import {IIssue, IIssueEventData} from "common/models/Issue"
 import * as _ from 'lodash'
 import EventHub from "common/events/Event"
 import {DataActionFactory} from "common/store/actions/DataActionFactory"
 import {AppActionFactory} from "common/store/actions/AppActionFactory"
 import delay from "common/util/Delay"
 import db from "renderer/db/ObjectDatabase"
-import {getIssueEvents} from "renderer/net/IssueAPI"
+import {getIssueEvents, updateIssueEvents} from "renderer/net/IssueAPI"
+import {setStatusMessage} from "common/util/AppStatusHelper"
+import Deferred from "common/Deferred"
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	pendingIssueData:{[id:number]:Deferred<void>} = {}
 
 async function getAppActions():Promise<AppActionFactory> {
 	const {AppActionFactory} = require("common/store/actions/AppActionFactory")
@@ -33,13 +37,29 @@ async function getDataActions():Promise<DataActionFactory> {
 }
 
 async function loadSelectedIssueData(issueIds = getStoreState().AppState.selectedIssueIds):Promise<void> {
-	if (!issueIds || issueIds.length !== 1) {
+	if (!issueIds || issueIds.length !== 1 || pendingIssueData[issueIds[0]]) {
 		return
 	}
 
-	const data = await getIssueEvents(issueIds[0])
-	if (data) {
-    ;(await getDataActions()).setIssueEventData(data)
+  const
+		issueId = issueIds[0],
+		deferred = pendingIssueData[issueId] = new Deferred<void>(),
+		setIssueEventData = async (data:IIssueEventData | null):Promise<void> => {
+    const selectedIssueIds = getStoreState().AppState.selectedIssueIds
+			if (data && selectedIssueIds.includes(issueId) && selectedIssueIds.length === 1) {
+        const dataActions = await getDataActions()
+				dataActions.setIssueEventData(data)
+      }
+		}
+
+	try {
+    await setIssueEventData(await getIssueEvents(issueId))
+		await setIssueEventData(await updateIssueEvents(issueId))
+  } catch (err) {
+		log.error("Unable to update issue data", err)
+	} finally {
+		delete pendingIssueData[issueId]
+    deferred.resolve()
   }
 }
 
@@ -264,7 +284,8 @@ async function init():Promise<void> {
 		repo = repos.find(repo => repo.id === repoId)
 
 	log.info("Loading issues for", repoId, repo)
-	if (repo) {
+
+	const updateRepoObjects = async ():Promise<void> => {
     dataActions.setRepoObjects(
       await db
         .issues
@@ -288,11 +309,22 @@ async function init():Promise<void> {
         .toArray(),
     )
 	}
-	// await setOrgs(ObjectEvent.Synced, -1, [])
-	// await setRepos(ObjectEvent.Synced, -1, [])
-	// await setIssues(ObjectEvent.Synced, -1, [])
 
-	syncAll().catch(err => log.error("Sync all failed",err))
+	if (repo) {
+    updateRepoObjects()
+	}
+
+	syncAll()
+		.catch(err => log.error("Sync all failed",err))
+
+	// Register for data events
+	EventHub.on("SyncAllData",async () => {
+    setStatusMessage("Syncing all")
+		await syncAll()
+    setStatusMessage("Synced all")
+	})
+
+	EventHub.on("ReposUpdated",() => setRepos(null,null,null))
 }
 
 export default init()

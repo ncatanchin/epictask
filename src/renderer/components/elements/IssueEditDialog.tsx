@@ -21,19 +21,23 @@ import {selectedRepoSelector} from "common/store/selectors/DataSelectors"
 
 const log = getLogger(__filename)
 
+type Classes = "root"
 
-function baseStyles(theme: Theme): StyleDeclaration {
+function baseStyles(theme: Theme): StyleDeclaration<Classes> {
   const
     {palette} = theme,
     {primary, secondary} = palette
 
   return {
-    root: [{
-      "& .dialogContent": [makeHeightConstraint("70vh"), FlexColumn, PositionRelative, {
+    root: {
+      "& .dialogContent": {
+        ...makeHeightConstraint("70vh"),
+        ...FlexColumn,
+        ...PositionRelative,
         width: "70vw",
         maxWidth: 1280
-      }]
-    }]
+      }
+    }
   }
 }
 

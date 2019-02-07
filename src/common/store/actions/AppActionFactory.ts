@@ -43,7 +43,10 @@ export class AppActionFactory extends ActionFactory<AppState, ActionMessage<AppS
   @ActionReducer()
   setSelectedRepoId(selectedRepoId: number) {
     return (state: AppState) => patchState(state, {
-      selectedRepoId
+      selectedRepoId,
+      enabledRepoIds: state.enabledRepoIds.includes(selectedRepoId) ?
+        state.enabledRepoIds :
+        [...state.enabledRepoIds,selectedRepoId]
     })
   }
 
@@ -130,6 +133,9 @@ export class AppActionFactory extends ActionFactory<AppState, ActionMessage<AppS
         status.message = {...msg}
       }
     }
+
+    if (history.length > 100)
+      history = history.slice(0,100)
 
     status.history = history
     return status

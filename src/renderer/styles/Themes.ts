@@ -1,5 +1,6 @@
 import {Color, makeMaterialPalette} from "renderer/styles/MaterialColors"
 import createMuiTheme from "@material-ui/core/styles/createMuiTheme"
+import {Color as CSSColor} from "csstype"
 import {
   alpha,
   Ellipsis, Fill,
@@ -321,6 +322,33 @@ function makeDarkThemeExt() {
           selected: makeStatusColor(action)
         }
       }) //as {[color in NotificationListItemColor]:string}
+    },
+    ListItem = {
+      colors: Run(() => {
+        const normal = {
+            bg: `border-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
+            accessory: darken(primary.contrastText, 0.7),
+            subtext: darken(primary.contrastText, 0.7),
+            topBg: Transparent,
+            boxShadow: "inset 0 0 0.2rem 0.2rem rgba(10,10,10,0.3)",
+            dividerBoxShadow: "0px 0rem 0.5rem 0.3rem rgba(3, 12, 7, 0.80)",
+            outline: Transparent,
+            text: primary.contrastText,
+            marker: Transparent
+          },
+          makeStatusColor = (color: Color): (typeof normal) => ({
+            ...normal,
+            bg: `border-box radial-gradient(${color.main}, ${lighten(color.main, 0.2)})`,//darken(primary.dark,0.4),
+            topBg: Transparent,
+            subtext: lighten(color.contrastText, 0.7)
+          })
+
+
+        return {
+          normal,
+          selected: makeStatusColor(action)
+        } as {[state:string]: {[code in ListItemColor]: CSSColor}}
+      })
     }
 
   return {
@@ -379,7 +407,8 @@ function makeDarkThemeExt() {
       BlockingWorkProgress,
       MenuList,
       SearchProvider,
-      NotificationListItem
+      NotificationListItem,
+      ListItem
     },
 
     outline,

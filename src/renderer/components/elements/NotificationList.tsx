@@ -27,6 +27,7 @@ import {INotification} from "common/models/Notification"
 import {withController} from "renderer/controllers/Controller"
 import NotificationsController from "renderer/controllers/NotificationsController"
 import NotificationListItem from "renderer/components/elements/NotificationListItem"
+import {selectNotification} from "renderer/net/NotificationAPI"
 
 const log = getLogger(__filename)
 
@@ -129,6 +130,10 @@ export default StyledComponent<P, SP>(baseStyles, {
         selectedIndexesContext
       } = rowProps,
       notification = dataSet.data[index] as INotification,
+      onDoubleClick = ():void => {
+        selectNotification(notification)
+          .catch(err => log.error("Unable to select notification", err))
+      },
       Consumer = getValue(() => selectedIndexesContext.Consumer, null as React.Consumer<Array<number>> | null)
 
     return !Consumer ? <div
@@ -138,6 +143,7 @@ export default StyledComponent<P, SP>(baseStyles, {
       {(selectedIndexes: Array<number> | null) => <NotificationListItem
         style={style}
         notification={notification}
+        onDoubleClick={onDoubleClick}
         onClick={onClick}
         selected={selectedIndexes && selectedIndexes.includes(index)}
       />}
@@ -149,7 +155,6 @@ export default StyledComponent<P, SP>(baseStyles, {
    * Updated selected notifications
    */
   const updateSelectedNotifications = useCallback(async (dataSet: IDataSet<INotification>, indexes: Array<number>): Promise<void> => {
-    log.info("Update notification indexes", indexes, dataSet)
     const
       {data} = dataSet,
       ids = indexes

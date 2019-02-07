@@ -1,22 +1,19 @@
 ///<reference path="../../typings/custom.d.ts"/>
 import 'source-map-support/register'
+import './util/ErrorHandler'
 import "react-hot-loader/patch"
 import "./ReactHotConfig"
 import * as ReactDOM from "react-dom"
 import "moment-timezone"
 import "common/util/RendererExt"
-
-
 import "./assets/fonts/fonts.global.scss"
 import "./assets/css/global.scss"
 import {EventEmitter} from "events"
 import "./Env"
 import * as React from "react"
-//import * as ReactDOM from "react-dom"
 
 import {loadAndInitStore} from "common/store/AppStore"
 import "renderer/store/UIAppStoreTypes"
-
 
 import * as _ from 'lodash'
 import * as $ from 'jquery'

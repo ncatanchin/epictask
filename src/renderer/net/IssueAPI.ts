@@ -1,4 +1,4 @@
-import {getAPI} from "renderer/net/GithubAPI"
+import {formatTimestamp, getAPI} from "renderer/net/GithubAPI"
 import {
   IIssue,
   IIssueEvent,
@@ -19,11 +19,14 @@ import * as moment from "moment"
 import {IMilestone} from "common/models/Milestone"
 import {ILabel} from "common/models/Label"
 import {Omit} from "common/Types"
+import timestampCache from "common/util/TimestampCache"
 
 const log = getLogger(__filename)
 
 
-export async function createComment(issue:IIssue | number, body:string):Promise<IComment> {
+
+
+export async function createComment(issue: IIssue | number, body: string): Promise<IComment> {
   if (isNumber(issue)) {
     issue = await db.issues.get(issue)
   }
@@ -42,7 +45,7 @@ export async function createComment(issue:IIssue | number, body:string):Promise<
       number: issueNumber,
       body
     })).data,
-    comment = {...newComment,issue_id: issueId} as IComment
+    comment = {...newComment, issue_id: issueId} as IComment
 
 
   await db.comments.put(comment)
@@ -55,7 +58,7 @@ export async function createComment(issue:IIssue | number, body:string):Promise<
   return comment
 }
 
-export async function patchComment(issue:IIssue | number, comment:IComment | number, body:string):Promise<IComment> {
+export async function patchComment(issue: IIssue | number, comment: IComment | number, body: string): Promise<IComment> {
   if (isNumber(issue)) {
     issue = await db.issues.get(issue)
   }
@@ -73,9 +76,9 @@ export async function patchComment(issue:IIssue | number, comment:IComment | num
       owner: repo.owner.login,
       repo: repo.name,
       body,
-      comment_id:comment.id
+      comment_id: comment.id
     })).data,
-    newComment = {...comment,...updatedComment,issue_id: comment.issue_id}
+    newComment = {...comment, ...updatedComment, issue_id: comment.issue_id}
 
 
   await db.comments.put(newComment)
@@ -89,7 +92,7 @@ export async function patchComment(issue:IIssue | number, comment:IComment | num
 }
 
 
-export async function createIssue(repo:IRepo, params:Omit<IssuesCreateParams,"owner" | "repo">):Promise<IIssue> {
+export async function createIssue(repo: IRepo, params: Omit<IssuesCreateParams, "owner" | "repo">): Promise<IIssue> {
   const
     gh = getAPI(),
     newIssue = (await gh.issues.create({
@@ -111,7 +114,7 @@ export async function createIssue(repo:IRepo, params:Omit<IssuesCreateParams,"ow
  * @param issue
  * @param props
  */
-export async function patchIssue(issue:IIssue | number,props:Partial<IssuesUpdateParams> | null):Promise<IIssue> {
+export async function patchIssue(issue: IIssue | number, props: Partial<IssuesUpdateParams> | null): Promise<IIssue> {
   if (isNumber(issue)) {
     issue = await db.issues.get(issue)
   }
@@ -127,7 +130,7 @@ export async function patchIssue(issue:IIssue | number,props:Partial<IssuesUpdat
   await gh.issues.update({
     owner: repo.owner.login,
     repo: repo.name,
-    number:issue.number,
+    number: issue.number,
     ...props
   })
 
@@ -135,36 +138,36 @@ export async function patchIssue(issue:IIssue | number,props:Partial<IssuesUpdat
     updatedIssue = (await gh.issues.get({
       owner: repo.owner.login,
       repo: repo.name,
-      number:issue.number
+      number: issue.number
     })).data as IIssue
 
 
   const
-    newIssue = {...issue,...updatedIssue} as IIssue
+    newIssue = {...issue, ...updatedIssue} as IIssue
 
   await db.issues.put(newIssue)
 
-  if (getValue(() => selectedRepoSelector(getStoreState()).url === newIssue.repository_url )) {
+  if (getValue(() => selectedRepoSelector(getStoreState()).url === newIssue.repository_url)) {
     new DataActionFactory().updateIssue(newIssue)
   }
 
   return newIssue
 }
 
-export async function patchIssueMilestone(issue:IIssue | number,milestone: IMilestone | null):Promise<IIssue> {
-  return await patchIssue(issue,{
+export async function patchIssueMilestone(issue: IIssue | number, milestone: IMilestone | null): Promise<IIssue> {
+  return await patchIssue(issue, {
     milestone: milestone ? milestone.number : null
   })
 }
 
-export async function patchIssueAssignees(issue:IIssue | number,assignees: Array<ICollaborator>):Promise<IIssue> {
-  return await patchIssue(issue,{
+export async function patchIssueAssignees(issue: IIssue | number, assignees: Array<ICollaborator>): Promise<IIssue> {
+  return await patchIssue(issue, {
     assignees: assignees.map(assignee => assignee.login)
   })
 }
 
-export async function patchIssueLabels(issue:IIssue | number,labels: Array<ILabel>):Promise<IIssue> {
-  return await patchIssue(issue,{
+export async function patchIssueLabels(issue: IIssue | number, labels: Array<ILabel>): Promise<IIssue> {
+  return await patchIssue(issue, {
     labels: labels.map(label => label.name)
   })
 }
@@ -175,7 +178,7 @@ export async function patchIssueLabels(issue:IIssue | number,labels: Array<ILabe
  *
  * @param id
  */
-export function getIssue(id:number):Promise<IIssue> {
+export function getIssue(id: number): Promise<IIssue> {
   return db.issues.get(id)
 }
 
@@ -186,14 +189,14 @@ export function getIssue(id:number):Promise<IIssue> {
  * @param repo
  * @param comment
  */
-export async function findIssueIdFromComment(repo:IRepo, comment:IComment):Promise<number | null> {
+export async function findIssueIdFromComment(repo: IRepo, comment: IComment): Promise<number | null> {
   const
     url = comment.html_url,
     urlParts = url.split("/"),
     issueParts = _.last(urlParts).split("#")[0],
-    number = parseInt(issueParts,10)
+    number = parseInt(issueParts, 10)
 
-  let issueId:number | null = null
+  let issueId: number | null = null
   if (comment.issue_url) {
     const issues = await db.issues.where("url").equals(comment.issue_url).toArray()
     issueId = !issues.length ? null : issues[0].id
@@ -208,12 +211,73 @@ export async function findIssueIdFromComment(repo:IRepo, comment:IComment):Promi
 }
 
 
-export async function findIssueIdFromEvent(repo:IRepo, event:IIssueEvent):Promise<number | null> {
+export async function findIssueIdFromEvent(repo: IRepo, event: IIssueEvent): Promise<number | null> {
   return getValue(() => event.issue.id, null)
 }
 
 
-export async function getIssueEvents(issueId:number):Promise<IIssueEventData | null> {
+export async function updateIssueEvents(issueId: number): Promise<IIssueEventData | null> {
+
+  const
+    gh = getAPI(),
+    issue = await getIssue(issueId),
+    timestampId = `issue-data-${issueId}`,
+    repo = await db.repos.where("url").equals(issue.repository_url).first(),
+    newTimestamp = Date.now(),
+    sinceTimestamp = timestampCache.get(timestampId,0),
+    issueEventOpts = (gh.issues.listEvents as any).endpoint.merge({
+      owner: repo.owner.login,
+      number: issue.number,
+      repo: repo.name,
+      per_page: 100,
+      //since: formatTimestamp(sinceTimestamp)
+    }),
+    commentOpts = (gh.issues.listComments as any).endpoint.merge({
+      owner: repo.owner.login,
+      repo: repo.name,
+      per_page: 100,
+      number: issue.number,
+      sort: "updated",
+      direction: "asc",
+      since: formatTimestamp(sinceTimestamp)
+    })
+
+
+  try {
+    for await (const response of ((gh as any).paginate.iterator(commentOpts))) {
+      const comments: Array<IComment> = await Promise.all(response.data.map(async (comment: IComment): Promise<IComment> => ({
+        ...comment,
+        issue_id: issue.id
+      }))) as any
+
+      await db.comments.bulkPut(comments)
+    }
+
+    for await (const response of ((gh as any).paginate.iterator(issueEventOpts))) {
+      const events: Array<IIssueEvent> = await Promise.all(response.data.map(async (event: IIssueEvent): Promise<IIssueEvent> => ({
+        ...event,
+        issue,
+        issue_id: issue.id,
+        repo_id: getValue(() => event.repo.id, null)
+      }))) as any
+
+      log.info("Saving events", events)
+      await db.issueEvents.bulkPut(events)
+
+    }
+
+    timestampCache.set(timestampId,newTimestamp)
+  } catch (err) {
+    log.error("Unable to sync with opts", issueEventOpts, err)
+  }
+
+
+  return await getIssueEvents(issueId)
+
+}
+
+
+export async function getIssueEvents(issueId: number): Promise<IIssueEventData | null> {
   const
     issue = await getIssue(issueId)
 
@@ -250,11 +314,8 @@ export async function getIssueEvents(issueId:number):Promise<IIssueEventData | n
 }
 
 
-
-export function isTimelineComment<
-  K extends IssueEventTimelineItemType = any,
-  P extends IssueEventTimelineItemPayloadType<K> = any
->(timelineEvent:IIssueEventTimelineItem<K,P>):timelineEvent is IIssueEventTimelineItem<K,IComment> {
+export function isTimelineComment<K extends IssueEventTimelineItemType = any,
+  P extends IssueEventTimelineItemPayloadType<K> = any>(timelineEvent: IIssueEventTimelineItem<K, P>): timelineEvent is IIssueEventTimelineItem<K, IComment> {
   return timelineEvent.type === "comment"
 }
 
