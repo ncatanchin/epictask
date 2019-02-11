@@ -25,6 +25,7 @@ module.exports = isProcessMain => ({
   'process.env.devToolsOpen': devToolsOpen,
   'process.env.MAPPER_ENV': JSON.stringify(envName),
   'process.env.__DEV__': isDev,
+  'process.env.PACKAGE': JSON.stringify(process.env.PACKAGE ? "true" : "false"),
   'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
   'process.env.BASEDIR': JSON.stringify(baseDir),
   'process.env.MAPPER_CONFIG': JSON.stringify({}),

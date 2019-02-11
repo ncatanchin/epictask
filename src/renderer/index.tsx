@@ -1,13 +1,14 @@
 ///<reference path="../../typings/custom.d.ts"/>
 import 'source-map-support/register'
 import './util/ErrorHandler'
-import "react-hot-loader/patch"
+import "./assets/fonts/fonts.global.scss"
+import "./assets/css/global.scss"
 import "./ReactHotConfig"
+import "react-hot-loader/patch"
 import * as ReactDOM from "react-dom"
 import "moment-timezone"
 import "common/util/RendererExt"
-import "./assets/fonts/fonts.global.scss"
-import "./assets/css/global.scss"
+
 import {EventEmitter} from "events"
 import "./Env"
 import * as React from "react"

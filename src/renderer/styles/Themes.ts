@@ -47,7 +47,8 @@ function makeDarkThemeExt() {
     focusColor = action.main,
     focusColorText = action.contrastText,
     outlineFocused = `inset 0px 0px 0.1rem 0.1rem ${focusColor}`,
-    headerBg = `content-box radial-gradient(${darken(primary.dark, 0.7)}, ${darken(primary.dark, 0.8)})`,
+    //headerBg = `content-box radial-gradient(${lighten(primary.main, 0.2)}, ${lighten(primary.main, 0.5)})`,
+    headerBg = `content-box radial-gradient(#DBDBDB, #DEDEDE)`,
     outline = {
       "&::after": [PositionAbsolute, Fill, makeTransition('box-shadow'), {
         top: 0,
@@ -219,7 +220,7 @@ function makeDarkThemeExt() {
     },
     Chip = {
       dimen: {
-        small: 1.4,
+        small: 1.6,
         normal: 2
       }
     },
@@ -526,27 +527,6 @@ export const darkTheme: MUITheme & EpicThemeExt = makeDarkTheme() as any
 
 
 declare global {
-  interface ITypographyStyles {
-    highlight: NestedStyles
-  }
-
-  interface IComponentStyles {
-
-    Typography: ITypographyStyles
-    SplitPane: ISplitPaneStyles
-    Header: IHeaderStyles
-    IssuesLayout: IIssuesLayoutStyles
-    Labels: ILabelsStyles
-    IssueListItem: IIssueListItemStyles
-    IIssueDetails: IIssueDetailsStyles
-
-  }
-
-  interface ITheme {
-    palette: IThemePalette
-    components: IComponentStyles
-  }
-
   type Theme = EpicThemeExt & MUITheme
 }
 

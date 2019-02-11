@@ -67,7 +67,7 @@ class NotificationObjectManager extends ObjectManager<INotification, string> {
 			EventHub.emit("NotificationsSynced",syncedAt)
 
 
-			log.info(`Updated ${notifications.length} notifications`)
+			//log.info(`Updated ${notifications.length} notifications`)
       pushStatusMessage(makeStatusMessage("Synchronized"))
 
 			this.emit(ObjectEvent.Synced, syncedAt)

@@ -21,15 +21,16 @@ function makeConfig(isMain) {
    */
   function makeExternals() {
     const whitelist = [
-      /webpack-hot/,
+      /webpack/,
       /codemirror/,
       /highlight\.js/,
       /octokit/,
-      // /hot-loader/,
+      /hot-loader/,
       /node-fetch/,
-      // /react/,
+      //"react",
+      //"react-dom",
       // /babel/,
-      // /react-hot/,
+      /react-hot/,
       // /hot-loader/,
       //"react-dom/,
       /material-ui/
@@ -82,16 +83,16 @@ function makeConfig(isMain) {
     module: {
 
       rules: [
-        {
-          test: /\.js$/,
-          exclude: /(typelogger|node_modules)/,
-          use: ["source-map-loader"],
-          enforce: "pre"
-        },
-        {
-          test: /^\.(scss|css)$/,
-          use: ['style-loader!css-loader!sass-loader']
-        },
+        // {
+        //   test: /\.js$/,
+        //   exclude: /(typelogger|node_modules)/,
+        //   use: ["source-map-loader"],
+        //   enforce: "pre"
+        // },
+        // {
+        //   test: /^\.(scss|css)$/,
+        //   use: ['style-loader!css-loader!sass-loader']
+        // },
         // {
         //   test: /\.jsx?$/,
         //     //exclude: /node_modules/,
@@ -104,60 +105,60 @@ function makeConfig(isMain) {
         //     }
         //   }]
         // },
-        {
-          test: /\.(j|t)sx?$/,
-          exclude: /node_modules/,
-          use: [{
-            //Path.resolve(rootPath,"node_modules",
-            loader: "babel-loader",
-            options: {
-              cacheDirectory: true,
-              babelrc: false,
-              presets: [
-                [
-                  "@babel/preset-env",
-                  {
-                    debug: true,
-                    targets: {
-                      electron: "4.0.2"
-                    }
-                  }
-                ],
-                "@babel/preset-typescript",
-                "@babel/preset-react"
-              ],
-              plugins: [
-                // plugin-proposal-decorators is only needed if you're using experimental decorators in TypeScript
-                ["@babel/plugin-proposal-decorators", {legacy: true}],
-                ["@babel/plugin-proposal-class-properties", {loose: true}],
-                ["@babel/plugin-syntax-dynamic-import"],
-                ["react-hot-loader/babel"]
-              ],
-              sourceMaps: "both"
-            }
-          }]
-        },
+        // {
+        //   test: /\.(j|t)sx?$/,
+        //   exclude: /node_modules/,
+        //   use: [{
+        //     //Path.resolve(rootPath,"node_modules",
+        //     loader: "babel-loader",
+        //     options: {
+        //       cacheDirectory: true,
+        //       babelrc: false,
+        //       presets: [
+        //         [
+        //           "@babel/preset-env",
+        //           {
+        //             debug: true,
+        //             targets: {
+        //               electron: "4.0.2"
+        //             }
+        //           }
+        //         ],
+        //         "@babel/preset-typescript",
+        //         "@babel/preset-react"
+        //       ],
+        //       plugins: [
+        //         // plugin-proposal-decorators is only needed if you're using experimental decorators in TypeScript
+        //         ["@babel/plugin-proposal-decorators", {legacy: true}],
+        //         ["@babel/plugin-proposal-class-properties", {loose: true}],
+        //         ["@babel/plugin-syntax-dynamic-import"],
+        //         ["react-hot-loader/babel"]
+        //       ],
+        //       sourceMaps: "both"
+        //     }
+        //   }]
+        // },
         // {
         //   test: /\.([jt])sx?$/,
         //   use: ["source-map-loader"],
         //   enforce: "pre"
         // }
-        {
-          test: /\.jsx?$/,
-          include: /node_modules/,
-          use: ['react-hot-loader/webpack'],
-        },
-        {
-          test: /\.([jt])sx?$/,
-          use: ["source-map-loader"],
-          enforce: "pre"
-        }
+        // {
+        //   test: /\.jsx?$/,
+        //   include: /node_modules/,
+        //   use: ['react-hot-loader/webpack'],
+        // },
+        // {
+        //   test: /\.([jt])sx?$/,
+        //   use: ["source-map-loader"],
+        //   enforce: "pre"
+        // }
       ]
     },
   }
 
-  // if (!isMain)
-  config.externals = makeExternals()
+  if (!isMain)
+    config.externals = makeExternals()
 
   return config
 }

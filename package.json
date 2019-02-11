@@ -1,6 +1,6 @@
 {
   "name": "epictask",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
@@ -151,11 +151,17 @@
   },
   "scripts": {
     "dev": "electron-webpack dev",
-    "compile": "cross-env NODE_ENV=development SKIP_TS=1 electron-webpack",
+    "compile": "cross-env PACKAGE=true NODE_ENV=development electron-webpack",
     "build": "npm run compile && electron-builder -c.compression=store \"-c.mac.identity=Densebrain, Inc\"",
     "build:nosign": "npm run compile && electron-builder -c.compression=store -c.mac.identity=null",
     "build:dir": "npm run compile && electron-builder --dir -c.compression=store -c.mac.identity=null",
     "storybook": "start-storybook -p 9001 -c .storybook"
+  },
+  "build": {
+    "productName": "Epictask",
+    "mac": {
+      "publish": ["github"]
+    }
   },
   "electronWebpack": {
     "main": {

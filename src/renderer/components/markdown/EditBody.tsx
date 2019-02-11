@@ -1,7 +1,13 @@
 import * as React from "react"
 import {useCallback, useContext, useEffect, useMemo, useRef, useState} from "react"
 import getLogger from "common/log/Logger"
-import {IThemedProperties, mergeClasses, NestedStyles, StyleDeclaration} from "renderer/styles/ThemedStyles"
+import {
+  IThemedProperties,
+  mergeClasses,
+  NestedStyles, rem,
+  StyleDeclaration,
+  Transparent
+} from "renderer/styles/ThemedStyles"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {IIssue} from "common/models/Issue"
 import {IComment} from "common/models/Comment"
@@ -17,20 +23,39 @@ import {DirtyDataContext} from "renderer/components/DirtyDataInterceptor"
 
 const log = getLogger(__filename)
 
+type Classes = "root" | "buttonSaveRoot" | "buttonCancelRoot" | "buttonSaveLabel" | "buttonCancelLabel"
 
-function baseStyles(theme: Theme): StyleDeclaration {
+function baseStyles(theme: Theme): StyleDeclaration<Classes> {
   const
     {palette} = theme,
     {primary, secondary} = palette
 
   return {
-    root: []
+    root: {},
+    buttonSaveRoot: {
+      borderRadius: 0
+    },
+
+    buttonCancelRoot: {
+      borderRadius: 0,
+      background: Transparent
+    },
+
+    buttonSaveLabel: {
+      fontSize: rem(1.4),
+      fontWeight: 600
+    },
+
+    buttonCancelLabel: {
+      fontSize: rem(1.4),
+      fontWeight: 400
+    }
   }
 }
 
 export type BodyType = "comment" | "newComment" | "issue"
 
-interface P extends IThemedProperties {
+interface P extends IThemedProperties<Classes> {
   issue: IIssue
   type: BodyType
   object: Partial<IIssue> | Partial<IComment>
@@ -113,12 +138,31 @@ export default StyledComponent<P>(baseStyles)(function EditBody(props: P): React
     <div className="controls">
       <div className="note">{dirty ? "Unsaved changes" : "No changes"}</div>
       <div className="buttons">
-        <Button variant="text" size="small" className="button" onClick={onCancel}>
-          <CancelIcon className={mergeClasses("iconLeft", "iconSmall")} />
+        <Button
+          variant="text"
+          size="small"
+          className="button"
+          classes={{
+            root: classes.buttonCancelRoot,
+            label: classes.buttonCancelLabel
+          }}
+          onClick={onCancel}
+        >
+          {/*<CancelIcon className={mergeClasses("iconLeft", "iconSmall")} />*/}
           Cancel
         </Button>
-        <Button variant="contained" size="small" className="button" disabled={!dirty}  onClick={onSaveInternal}>
-          <SaveIcon className={mergeClasses("iconLeft", "iconSmall")} />
+        <Button
+          variant="contained"
+          size="small"
+          className="button"
+          disabled={!dirty}
+          classes={{
+            root: classes.buttonSaveRoot,
+            label: classes.buttonSaveLabel
+          }}
+          onClick={onSaveInternal}
+        >
+          {/*<SaveIcon className={mergeClasses("iconLeft", "iconSmall")} />*/}
           Save
         </Button>
       </div>

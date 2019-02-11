@@ -20,12 +20,19 @@ import {IMilestone} from "common/models/Milestone"
 import {ILabel} from "common/models/Label"
 import {Omit} from "common/Types"
 import timestampCache from "common/util/TimestampCache"
+import {AppActionFactory} from "common/store/actions/AppActionFactory"
+import delay from "common/util/Delay"
+import {assert} from "common/ObjectUtil"
 
 const log = getLogger(__filename)
 
 
-
-
+/**
+ * Create a new comment
+ *
+ * @param issue
+ * @param body
+ */
 export async function createComment(issue: IIssue | number, body: string): Promise<IComment> {
   if (isNumber(issue)) {
     issue = await db.issues.get(issue)
@@ -58,6 +65,13 @@ export async function createComment(issue: IIssue | number, body: string): Promi
   return comment
 }
 
+/**
+ * Patch/Update a comment
+ *
+ * @param issue
+ * @param comment
+ * @param body
+ */
 export async function patchComment(issue: IIssue | number, comment: IComment | number, body: string): Promise<IComment> {
   if (isNumber(issue)) {
     issue = await db.issues.get(issue)
@@ -92,6 +106,12 @@ export async function patchComment(issue: IIssue | number, comment: IComment | n
 }
 
 
+/**
+ * Create a new issue
+ *
+ * @param repo
+ * @param params
+ */
 export async function createIssue(repo: IRepo, params: Omit<IssuesCreateParams, "owner" | "repo">): Promise<IIssue> {
   const
     gh = getAPI(),
@@ -103,7 +123,6 @@ export async function createIssue(repo: IRepo, params: Omit<IssuesCreateParams, 
 
   await db.issues.put(newIssue)
 
-  log.info("Created issue", newIssue)
   new DataActionFactory().updateIssue(newIssue)
   return newIssue
 }
@@ -114,7 +133,7 @@ export async function createIssue(repo: IRepo, params: Omit<IssuesCreateParams, 
  * @param issue
  * @param props
  */
-export async function patchIssue(issue: IIssue | number, props: Partial<IssuesUpdateParams> | null): Promise<IIssue> {
+export async function patchIssue(issue: IIssue | number, props: Partial<IssuesUpdateParams>): Promise<IIssue> {
   if (isNumber(issue)) {
     issue = await db.issues.get(issue)
   }
@@ -127,31 +146,43 @@ export async function patchIssue(issue: IIssue | number, props: Partial<IssuesUp
     throw Error(`Unable to find repo: ${issue.repository_url}`)
 
 
-  await gh.issues.update({
-    owner: repo.owner.login,
-    repo: repo.name,
-    number: issue.number,
-    ...props
-  })
+  const patchedIssue = await patchIssueOnGithub(issue,repo,props)
+
+  await db.issues.put(patchedIssue)
 
   const
-    updatedIssue = (await gh.issues.get({
-      owner: repo.owner.login,
-      repo: repo.name,
-      number: issue.number
-    })).data as IIssue
+    state = getStoreState(),
+    {selectedIssueIds} = state.AppState,
+    appActions = new AppActionFactory(),
+    dataActions = new DataActionFactory(),
+    isSelected = selectedIssueIds.hasOne() && selectedIssueIds.first() === patchedIssue.id
 
-
-  const
-    newIssue = {...issue, ...updatedIssue} as IIssue
-
-  await db.issues.put(newIssue)
-
-  if (getValue(() => selectedRepoSelector(getStoreState()).url === newIssue.repository_url)) {
-    new DataActionFactory().updateIssue(newIssue)
+  if (isSelected) {
+    appActions.setSelectedIssueIds([...selectedIssueIds])
   }
 
-  return newIssue
+  if (state.DataState.issues.data.findIndex(it => it.id === patchedIssue.id) > -1) {
+    dataActions.updateIssue(patchedIssue)
+  }
+
+  if (isSelected) {
+    dataActions.setIssueEventData(await updateIssueEvents(issue.id))
+  }
+
+  return patchedIssue
+}
+
+export async function patchIssueOnGithub(issue:IIssue, repo:IRepo, props: Partial<IssuesUpdateParams>):Promise<IIssue> {
+  const
+    gh = getAPI(),
+    patchedIssue = (await gh.issues.update({
+      owner: repo.owner.login,
+      repo: repo.name,
+      number: issue.number,
+      ...props
+    })).data as IIssue
+
+  return {...issue,...patchedIssue}
 }
 
 export async function patchIssueMilestone(issue: IIssue | number, milestone: IMilestone | null): Promise<IIssue> {
@@ -180,6 +211,26 @@ export async function patchIssueLabels(issue: IIssue | number, labels: Array<ILa
  */
 export function getIssue(id: number): Promise<IIssue> {
   return db.issues.get(id)
+}
+
+
+export async function getIssueFromGithub(issueNumber:number,repo:IRepo): Promise<IIssue>
+export async function getIssueFromGithub(issue:IIssue): Promise<IIssue>
+export async function getIssueFromGithub(issueOrNumber:IIssue | number, repo?:IRepo | undefined): Promise<IIssue> {
+  const issueNumber = isNumber(issueOrNumber) ? issueOrNumber : issueOrNumber.number
+  repo = repo || (!isNumber(issueOrNumber) ? (await db.repos.where("url").equals(issueOrNumber.repository_url).first()) : null)
+  assert(!isNumber(issueNumber) || issueNumber < 1 || !repo,() =>
+    `Issue number or repo is not valid number=${issueNumber}, repo=${JSON.stringify(repo)},` +
+    `issueOrNumber=${issueOrNumber},${repo}`)
+
+  const gh = getAPI()
+
+  return (await gh.issues.get({
+    owner: repo.owner.login,
+    repo: repo.name,
+    number: issueNumber
+  })).data as IIssue
+
 }
 
 
@@ -261,7 +312,6 @@ export async function updateIssueEvents(issueId: number): Promise<IIssueEventDat
         repo_id: getValue(() => event.repo.id, null)
       }))) as any
 
-      log.info("Saving events", events)
       await db.issueEvents.bulkPut(events)
 
     }

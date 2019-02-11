@@ -150,7 +150,7 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 			})
 
 
-			log.info(`Loaded ${issues.length} issues`)
+			//log.info(`Loaded ${issues.length} issues`)
       pushStatusMessage(makeStatusMessage("Synchronized"))
 
 			this.emit(ObjectEvent.Synced, syncedAt, issues)

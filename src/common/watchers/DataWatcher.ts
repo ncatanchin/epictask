@@ -46,14 +46,14 @@ async function loadSelectedIssueData(issueIds = getStoreState().AppState.selecte
 		deferred = pendingIssueData[issueId] = new Deferred<void>(),
 		setIssueEventData = async (data:IIssueEventData | null):Promise<void> => {
     const selectedIssueIds = getStoreState().AppState.selectedIssueIds
-			if (data && selectedIssueIds.includes(issueId) && selectedIssueIds.length === 1) {
+			if (data && selectedIssueIds.includes(issueId) && selectedIssueIds.hasOne()) {
         const dataActions = await getDataActions()
 				dataActions.setIssueEventData(data)
       }
 		}
 
 	try {
-    await setIssueEventData(await getIssueEvents(issueId))
+    //await setIssueEventData(await getIssueEvents(issueId))
 		await setIssueEventData(await updateIssueEvents(issueId))
   } catch (err) {
 		log.error("Unable to update issue data", err)

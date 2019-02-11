@@ -35,18 +35,9 @@ function onRejection (err):void {
 
 process.on('uncaughtException', onException)
 process.on('unhandledRejection', onRejection)
-// process.on('uncaughtException', function (err) {
-//   console.log("Uncaught", err);
-// })
-
-// const jsdom = require("jsdom")
-// const { JSDOM } = jsdom
-// const bWindow = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`).window
-// Object.assign(global,{window:bWindow})
-//Object.assign(global,{window:{webpackJsonp: []}})
 
 // DISABLE WEB-SECURITY
-//app.commandLine.appendSwitch('disable-web-security')
+app.commandLine.appendSwitch('disable-web-security')
 
 async function checkAuthenticated():Promise<void> {
 	log.info(`Checking authentication: ${Auth.isAuthenticated()}`)

@@ -16,36 +16,36 @@ import {nextTick} from "typedux"
 const log = getLogger(__filename)
 
 class RepoObjectManager extends ObjectManager<IRepo, number> {
-  
-  
+
+
   constructor() {
     super(db.repos)
-    
+
     getStore().observe([AppState.Key, 'user'], (user:IUser | null) => {
       if (user) {
         guard(() => this.sync())
       }
     })
-    
+
     guard(() => this.sync())
-    
+
   }
-  
+
   async clear():Promise<any> {
     return undefined;
   }
-  
+
   getPrimaryKey(o:IRepo):number {
     return o.id
   }
-  
+
   onChange(o:IRepo) {
   }
-  
+
   onRemove(key:number) {
   }
-  
-  
+
+
   protected async doSync(...keys:number[]):Promise<boolean> {
     try {
       const
@@ -54,14 +54,14 @@ class RepoObjectManager extends ObjectManager<IRepo, number> {
         {user} = state.AppState,
         orgs = await db.orgs.toArray(),
         existingRepos = await this.all()
-      
+
       if (!user) {
         log.warn("Can not sync repos, not authenticated")
         return false
       }
-      
-      log.info("Loading repos for orgs", orgs)
-      
+
+      //log.info("Loading repos for orgs", orgs)
+
       const
         syncedAt = Date.now(),
         personalRepos = ((gh as any).paginate((gh.repos.listForUser as any).endpoint.merge({
@@ -79,10 +79,10 @@ class RepoObjectManager extends ObjectManager<IRepo, number> {
           (repo:IRepo) => getRepo(repo.owner.login,repo.name),
           {concurrency: APIConcurrency}
         )
-      
+
       repos.push(...otherRepos)
-      
-      log.info(`Loaded ${repos.length} repos`)
+
+      //log.info(`Loaded ${repos.length} repos`)
       await this.table.bulkPut(repos)
       this.emit(ObjectEvent.Synced, syncedAt, repos)
       return true
@@ -98,7 +98,7 @@ let repoObjectManager:RepoObjectManager | null = null
 export default function get():RepoObjectManager {
   if (!repoObjectManager)
     repoObjectManager = new RepoObjectManager()
-  
+
   return repoObjectManager
 }
 

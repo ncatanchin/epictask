@@ -12,7 +12,7 @@ import {
   NestedStyles, OverflowHidden,
   PositionAbsolute,
   PositionRelative,
-  rem, StyleDeclaration
+  rem, remToPx, StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {ICollaborator} from "common/models/Repo"
@@ -42,8 +42,10 @@ function fillProps(props: P): P {
 }
 
 function makeCollabs(props: P): Array<ICollaborator> {
-  const {collaboratorOptions: options, issue} = props
-  if (!issue) return []
+  const {collaborators, collaboratorOptions: options, issue} = props
+  if (!issue || collaborators) {
+    return collaborators ? collaborators : []
+  }
 
   const {assignee, assignees = []} = issue
   const allAssignees = [...(assignee ? [assignee] : []), ...(assignees || [])]
@@ -72,50 +74,63 @@ function baseStyles(theme: Theme): StyleDeclaration {
     {palette, components: {Chip, Avatar}} = theme,
     {primary, secondary} = palette,
     collabDimGetter = makeCollabDimGetter(theme),
-    picDimGetter = propsFn(({variant}: P): string => rem(Chip.dimen[variant])),
-    horizontalPaddingGetter = (props:P):number => props.compact ? 0 : theme.spacing.unit,
+    picDimGetter = propsFn(({variant}: P): string => rem(Chip.dimen[variant] - 0.2)),
+    horizontalPaddingGetter = (props: P): number => props.compact ? remToPx(0.2) : theme.spacing.unit,
+    verticalPaddingGetter = (props: P): number => props.compact ? remToPx(0.2) : remToPx(0.2),
     calcWidth = (props: P): number | string => {
       const
         collabs = makeCollabs(props),
         dim = collabDimGetter(props),
         padding = horizontalPaddingGetter(props)
 
-      return `calc((${padding}px * 2) + ${dim} + ((${dim} / 2) * ${Math.max(0,collabs.length - 1)}))`
+      return `calc((${padding}px * 2) + ${dim} + ((${dim} / 2) * ${Math.max(0, collabs.length - 1)}))`
     }
 
   return {
-    root: [
-      PositionRelative,
-      makeWidthConstraint(calcWidth),
-      makeHeightConstraint(propsFn(collabDimGetter)), {
-        paddingRight: horizontalPaddingGetter,
-        paddingLeft: horizontalPaddingGetter,
-      }],
+    root: {
+      ...PositionRelative,
+      ...makeWidthConstraint(calcWidth),
+      ...makeHeightConstraint(propsFn(collabDimGetter)),
+      paddingRight: horizontalPaddingGetter,
+      paddingLeft: horizontalPaddingGetter,
+      paddingTop: verticalPaddingGetter,
+      paddingBottom: verticalPaddingGetter
+    },
     avatars: [Fill, PositionRelative],
     pictureWrapper: [PositionAbsolute, FlexRowCenter, FillHeight, makeDimensionConstraints(collabDimGetter), {
-      boxSizing: "content-box",
+      boxSizing: "border-box",
       left: propsFn((props: P) => `calc(50% - (${collabDimGetter(props)} / 2))`),
       top: propsFn((props: P) => `calc(50% - (${collabDimGetter(props)} / 2))`)
 
     }],
-    pictureOutline: [FlexAuto, FlexRowCenter, OverflowHidden, makeDimensionConstraints(collabDimGetter), {
-      background: Avatar.colors.bg,
-      borderRadius: propsFn((props: P) => `calc(${collabDimGetter(props)} / 2)`)
-    }],
-    picture: [FlexAuto, OverflowHidden, makeDimensionConstraints(picDimGetter), {
+    pictureOutline: {...FlexRowCenter, ...PositionAbsolute,...makeDimensionConstraints(picDimGetter),
+
+      zIndex: 1,
       borderRadius: propsFn((props: P) => `calc(${picDimGetter(props)} / 2)`),
+      border: propsFn((props: P) => `${rem(0.1)} solid ${primary.dark}`),
+      //borderRadius: propsFn((props: P) => `calc(${picDimGetter(props)} / 2)`),
+      left: propsFn((props: P) => `calc(50% - (${picDimGetter(props)} / 2))`),
+      top: propsFn((props: P) => `calc(50% - (${picDimGetter(props)} / 2))`)
+    },
+    picture: {
+      ...PositionAbsolute, ...OverflowHidden, ...makeDimensionConstraints(picDimGetter),
+      borderRadius: propsFn((props: P) => `calc(${picDimGetter(props)} / 2)`),
+      left: propsFn((props: P) => `calc(50% - (${picDimGetter(props)} / 2))`),
+      top: propsFn((props: P) => `calc(50% - (${picDimGetter(props)} / 2))`),
+
       "&.default": [{
         background: Avatar.colors.bg,
         color: Avatar.colors.default,
         fill: Avatar.colors.default
       }]
-    }]
+    }
   }
 }
 
 interface P extends IThemedProperties {
   issue: IIssue
   maxVisibleCollaborators?: number | null
+  collaborators?: Array<ICollaborator>
   variant?: "normal" | "small"
   compact?: boolean
   editable?: boolean
@@ -142,20 +157,20 @@ export default StyledComponent<P>(baseStyles, selectors, {withTheme: true})(func
       editable,
       compact,
       collaboratorOptions,
+      collaborators: selectedCollaborators,
       issue,
       theme,
       ...other
     } = fullProps,
-    [collabs, setCollabs] = useState(makeCollabs(fullProps)),
+    [collabs, setCollabs] = useState(() => makeCollabs(fullProps)),
     collabDim = makeCollabDimGetter(theme)(fullProps),
-    [DefaultAvatar] = useState<React.ReactNode>(() => <Octicon className={mergeClasses(classes.picture, "default")} icon={PersonIcon}/>)
+    [DefaultAvatar] = useState<React.ReactNode>(() => <Octicon className={mergeClasses(classes.picture, "default")}
+                                                               icon={PersonIcon}/>)
 
   useEffect(() => {
-    const newCollabs = makeCollabs(fullProps)
-    if (!_.isEqual(collabs, newCollabs)) {
-      setCollabs(newCollabs)
-    }
-  }, [issue && issue.assignee, issue && issue.assignees])
+    const newCollabs = selectedCollaborators ? selectedCollaborators : makeCollabs(fullProps)
+    setCollabs(oldCollabs => _.isEqual(oldCollabs, newCollabs) ? oldCollabs : newCollabs)
+  }, [selectedCollaborators, issue && issue.assignee, issue && issue.assignees])
 
   const
     [open, setOpen] = useState(false),
@@ -186,22 +201,23 @@ export default StyledComponent<P>(baseStyles, selectors, {withTheme: true})(func
     <Tooltip title={tooltipTitle}>
       <div className={classes.avatar} onClick={() => setOpen(true)}>
         {collabs.length ? collabs.map((collab, index) => <div
-          key={collab.id}
-          className={classes.pictureWrapper}
-          style={{
-            zIndex: collabs.length - index,
-            marginLeft: `calc(${index} * (${collabDim} / 2))`
-          }}
-        >
-          <div className={classes.pictureOutline}>
+            key={collab.id}
+            className={classes.pictureWrapper}
+            style={{
+              zIndex: collabs.length - index,
+              marginLeft: `calc(${index} * (${collabDim} / 2))`
+            }}
+          >
             {collab.avatar_url ? <Img
               className={mergeClasses(classes.picture, className)}
               src={getAvatarURL(collab)}
               loader={DefaultAvatar}
               {...other}
             /> : DefaultAvatar}
-          </div>
-        </div>) :
+            <div className={classes.pictureOutline}>
+
+            </div>
+          </div>) :
           <div
             key="add"
             className={classes.pictureWrapper}

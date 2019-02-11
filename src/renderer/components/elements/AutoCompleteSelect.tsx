@@ -13,7 +13,9 @@ import {elevationStyles} from "renderer/components/elements/Elevation"
 import {Props as SelectProps} from "react-select/lib/Select"
 import ReactSelect from "react-select"
 import {StyledComponent, StyledElement} from "renderer/components/elements/StyledComponent"
-import {CommandManagerProps} from "renderer/command-manager-ui"
+import {CommandManagerProps, useCommandManager} from "renderer/command-manager-ui"
+import classNames from "classnames"
+import {assert} from "common/ObjectUtil"
 
 const
   log = getLogger(__filename),
@@ -211,7 +213,6 @@ export default StyledComponent<P,SP>(baseStyles, {withTheme: true, withRef: true
   const
     {
       id,
-      commandManagerProps = {},
       isClearable = false,
       options = Array<T>(),
       classes,
@@ -226,8 +227,17 @@ export default StyledComponent<P,SP>(baseStyles, {withTheme: true, withRef: true
       innerRef,
       selectRef,
       ...other
-    } = props,
+    } = _.omit(props,"commandManagerProps"),
     [currentOptions, setCurrentOptions] = useState<Array<T>>(options)
+
+  assert(!!props.commandManagerProps || !!id,() => "Either id or commandManagerProps must be provided")
+
+  const
+    commandManagerProps:CommandManagerProps = props.commandManagerProps || useCommandManager(
+      id,
+      builder => builder.make(),
+      selectRef as React.RefObject<any>
+    ).props
 
   useEffect(() => {
     setCurrentOptions(options)
@@ -247,7 +257,7 @@ export default StyledComponent<P,SP>(baseStyles, {withTheme: true, withRef: true
   return <div
     id={id}
     ref={innerRef}
-    className={mergeClasses(classes.root, customClasses.root)}
+    className={classNames(classes.root, customClasses.root)}
     {...commandManagerProps}
   >
     <Select

@@ -200,7 +200,7 @@ export default function baseStyles(theme: Theme): StyleDeclaration {
                             minHeight: rem(5),
                             flexGrow: 1
                           }],
-                          "& > .controls": [FlexAuto, FlexRowCenter, FillWidth, makePaddingRem(1), {
+                          "& > .controls": [FlexAuto, FlexRowCenter, FillWidth, makePaddingRem(0,0,0,1), {
                             "& > .note": [FlexScale, {}],
                             "& > .buttons": [FlexAuto, {
                               "& > .button": [{

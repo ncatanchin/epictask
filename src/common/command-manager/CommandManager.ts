@@ -255,6 +255,8 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
     }
 
     this.focusCheckLastElement = isBody ? null : document.activeElement
+    if (!isBody && $(document.activeElement).is(":visible"))
+      return
 
     const focusedContainers = this.focusedContainers()
     if (focusedContainers.length) return
@@ -378,7 +380,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
       this.emit(CommandManagerEvent.FocusChanged)
 
       // LOG THE FOCUS IDS
-      if (DEBUG && isRenderer()) {
+      if (DEBUG && !process.env.isMainProcess && process.env.PACKAGE !== "true" && process.env.NODE_ENV !== "production") {
         const $ = require('jquery')
         $("#focusedContainers").remove()
         $(`<div id="focusedContainers">${
@@ -962,7 +964,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
     // if (!isMaster)
     // 	return
 
-    log.info("Update accelerators", isMain())
+    //log.info("Update accelerators", isMain())
     // if (!isMain()) {
     // 	return
     // }

@@ -1,5 +1,5 @@
 import * as React from "react"
-import {useCallback, useMemo, useRef, useState} from "react"
+import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 import getLogger from "common/log/Logger"
 import {
   Ellipsis,
@@ -94,18 +94,34 @@ export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(
     defaultBody = useMemo<string>(() => controller && controller.defaultBody, [controller]),
     issuePatch = controller.patch,
     isDirty = useMemo<boolean>(() => controller && !_.isEqual(controller.defaultPatch, issuePatch), [controller]),
+    makeSelectedCollaborators = useCallback(
+      (): Array<ICollaborator> =>
+        getValue(() =>
+          issuePatch.assignees
+            .map(login => collaborators.data.find(collab => collab.login === login))
+            .filterNotNull(), [])
+      , [issuePatch,issuePatch.labels]),
     makeSelectedLabels = useCallback(
       (): Array<ILabel> =>
         getValue(() =>
           issuePatch.labels
             .map(name => labels.data.find(label => label.name === name))
             .filter(label => !!label), [])
-      , [controller]),
+      , [issuePatch,issuePatch.labels]),
     [selectedLabels, setSelectedLabels] = useState<Array<ILabel>>(makeSelectedLabels()),
+    [selectedCollaborators,setSelectedCollaborators] = useState<Array<ICollaborator>>(makeSelectedCollaborators()),
     isEdit = !!issue && (issue.id > 0),
     formRef = useRef<HTMLFormElement | null>(null)
   // ,
   // {props:commandManagerProps} = useCommandManager(id,builder => builder.make(),formRef,{autoFocus: makeCommandManagerAutoFocus(100)})
+
+  useEffect(() => {
+    setSelectedLabels(makeSelectedLabels())
+  },[issuePatch,issuePatch.labels])
+
+  useEffect(() => {
+    setSelectedCollaborators(makeSelectedCollaborators())
+  },[issuePatch,issuePatch.assignees])
 
   const
     onBodyChanged = useCallback((body: string): void => {
@@ -123,7 +139,7 @@ export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(
         assignee: getValue(() => collaborators[0].login, null),
         assignees: getValue(() => collaborators.map(collab => collab.login), [])
       }))
-    }, [setIssuePatch]),
+    }, [setIssuePatch,collaborators]),
     onLabelsSelected = useCallback((labels: Array<ILabel>) => {
       setIssuePatch(issuePatch => ({
         ...issuePatch,
@@ -181,6 +197,7 @@ export default StyledComponent<P>(baseStyles, selectors)(function IssueEditForm(
         id={`issue-${getValue(() => issue.id, 0)}-collaborators`}
         className="collaborators"
         issue={issue}
+        collaborators={selectedCollaborators}
         onSelected={onCollaboratorsSelected}
       />
     </div>

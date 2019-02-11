@@ -5,6 +5,7 @@ import getLogger from "common/log/Logger"
 import {AppActionFactory} from "common/store/actions/AppActionFactory"
 import {INetworkCall} from "common/models/AppStatus"
 import {shortId} from "common/IdUtil"
+import {Cancelable} from "lodash"
 
 const log = getLogger(__filename)
 
@@ -15,6 +16,31 @@ Octokit.plugin([
 
 const setupHooks = (octokit: Octokit):void => {
   //log.debug("Setting up interceptor", octokit)
+  const actions = new AppActionFactory()
+  const updaters:{[id:string]:((networkCall:INetworkCall,remove?:boolean) => void) & Cancelable} = {}
+
+  function updateNetworkCall(networkCall:INetworkCall, remove: boolean = false):void {
+    let updater = updaters[networkCall.id]
+    if (!updater && remove)
+      return
+
+    if (!updater) {
+      updater = updaters[networkCall.id] = _.debounce((networkCall:INetworkCall, remove: boolean = false) => {
+        actions.updateNetworkCall(networkCall,remove)
+      },250)
+    }
+
+
+
+    if (remove) {
+      updater.cancel()
+      delete updaters[networkCall.id]
+
+      actions.updateNetworkCall(networkCall,remove)
+    } else {
+      updater(networkCall,remove)
+    }
+  }
 
 	// hook into the request lifecycle
   octokit.hook.wrap('request', async (request, options) => {
@@ -25,14 +51,13 @@ const setupHooks = (octokit: Octokit):void => {
         code: 0,
         from: "",
         ...options
-      } as INetworkCall,
-      actions = new AppActionFactory()
+      } as INetworkCall
 
-    actions.updateNetworkCall(networkCall)
+    updateNetworkCall(networkCall)
     const response = await request(options)
-    log.debug(`${options.method} ${options.url} – ${response.status} in ${Date.now() - time}ms`)
+    //log.debug(`${options.method} ${options.url} – ${response.status} in ${Date.now() - time}ms`)
 
-    actions.updateNetworkCall(networkCall, true)
+    updateNetworkCall(networkCall, true)
 
     return response
   })

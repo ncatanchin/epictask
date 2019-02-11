@@ -30,8 +30,8 @@ let hmrReady = false
 function createMiddleWare():Middleware[] {
 	const middleware = [thunkMiddleware]
 	if (!process.env.isMainProcess) {
-		// const { routerMiddleware} = require('react-router-redux')
-		// middleware.push(routerMiddleware(history))
+		const { routerMiddleware} = require('react-router-redux')
+		middleware.push(routerMiddleware(history))
 	}
 	return middleware
 }
@@ -106,10 +106,42 @@ export function getStoreState():StringMap<any> & IRootState {
 	return getStore() ? getStore().getState() : {}
 }
 
+let reduxLoggingEnabled = false
+function setReduxLoggingEnabled(enabled:boolean) {
+	reduxLoggingEnabled = enabled
+}
+
+const logger = store => next => action => {
+  if (reduxLoggingEnabled) {
+    console.group('dispatching', action)
+    console.log('current state', store.getState())
+  }
+
+  let result = next(action)
+
+	if (reduxLoggingEnabled) {
+    console.log('next state', store.getState())
+    console.groupEnd()
+  }
+
+  return result
+}
+
+const crashReporter = store => next => action => {
+  try {
+    return next(action)
+  } catch (err) {
+    log.error('Caught an exception!', err)
+    throw err
+  }
+}
+
 async function initStore(devToolsMode:boolean = false):Promise<ObservableStore<IRootState>> {
-	const enhancers = [
-		applyMiddleware(...middleware)
-	]
+	const
+		allMiddleware = [...(process.env.isMainProcess ? [] : [logger]),...middleware],
+		enhancers = [
+			applyMiddleware(...allMiddleware)
+		]
 
 
   if (process.env.isMainProcess) {

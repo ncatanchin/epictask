@@ -18,88 +18,89 @@ import {
   StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {WindowControls} from "renderer/components/elements/WindowControls"
-import CheckIcon from "@material-ui/icons/Check"
+import {remote} from "electron"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 
 const log = getLogger(__filename)
 
 
-declare global {
-	interface IHeaderStyles {
-		colors: {
-			bg: string
-			logoBg: string
-			logoBoxShadow: string
-		}
-	}
-}
+type Classes = "root"
 
-function baseStyles(theme:Theme):StyleDeclaration {
+function baseStyles(theme:Theme):StyleDeclaration<Classes> {
 	const
 		{palette,components:{Header}} = theme,
 		{action, primary, secondary} = palette
 
 	return {
-		root: [makeHeightConstraint(rem(2)),FillWidth,FlexRowCenter,PositionRelative,OverflowHidden,{
+		root: {
+			...makeHeightConstraint(rem(2)),
+			...FillWidth,
+			...FlexRowCenter,
+			...PositionRelative,
+			...OverflowHidden,
 			background: Header.colors.bg,
 			boxShadow: Header.colors.boxShadow,
-			"& > .left, & > .right": [FlexRowCenter, FillHeight, {
+			"& > .left, & > .right": {...FlexRowCenter, ...FillHeight,
 
-			}],
-			"& > .left": [{
+			},
+			"& > .left": {
 				justifyContent: "flex-start"
-			}],
-			"& > .right": [FlexScale,{
+			},
+			"& > .right": {
+				...FlexAuto,
 				justifyContent: "flex-end"
-			}],
+			},
 
 			"&:hover > .logo .overlay": {
 				boxShadow: "inset 0 0 0.6rem rgba(100,100,100,0.8)"
 			},
 
-			"& > .logo": [FlexAuto,PositionRelative,{
+			"& > .logo": {
+				...FlexAuto,
+				...PositionRelative,
 				color: primary.main,
 				fontFamily: "Jura",
 				fontWeight: 400,
-				fontSize: rem(1.2),
+				fontSize: rem(1.3),
 				paddingLeft: rem(1),
+				marginTop: rem(-0.2),
+				lineHeight: 1,
 				"-webkit-user-select": "none",
 				"-webkit-app-region": "drag",
 				"&, & *, &:hover, &:hover *": {
 					cursor: "move !important",
-				},
-				// "& > .icon": [makeDimensionConstraints(rem(1.2)),{
-				// 	pointerEvents: "none",
-				// 	borderRadius: rem(0.6),
-				// 	backgroundColor: Header.colors.logoBg
-				// }],
-				// "& > .overlay": [PositionAbsolute,makeTransition("box-shadow"),makeDimensionConstraints(rem(1.4)),{
-				// 	pointerEvents: "all",
-				// 	top: 0,
-				// 	left: 0,
-				// 	right:0,
-				// 	bottom:0,
-				// 	zIndex: 100,
-				// 	borderRadius: rem(0.6),
-				// 	boxShadow: Header.colors.logoBoxShadow
-				// }]
-			}]
-		}],
-
-
-	} as any
+				}
+			},
+			"& > .spacer": {
+				...FlexScale,
+        "-webkit-app-region": "drag"
+			}
+		}
+	}
 }
 
-interface P extends IThemedProperties {
+interface P extends IThemedProperties<Classes> {
 	rightControls?: React.ReactNode
   leftControls?: React.ReactNode
+}
+
+function onDoubleClick():void {
+	const win = remote.getCurrentWindow()
+	if (win.isMaximized())
+		win.restore()
+	else
+		win.maximize()
 }
 
 export default StyledComponent<P>(baseStyles)(function Header(props:P):React.ReactElement<P> {
   const
     {classes,className,leftControls,rightControls} = props
 
-  return <div className={mergeClasses(classes.root,className)}>
+
+  return <div
+		className={mergeClasses(classes.root,className)}
+		onDoubleClick={onDoubleClick}
+	>
 
     <div className="left">
       <WindowControls />
@@ -108,9 +109,9 @@ export default StyledComponent<P>(baseStyles)(function Header(props:P):React.Rea
 
     <div className="logo">
 			epictask
-      {/*<CheckIcon className="icon"/>*/}
-      {/*<div className="overlay"/>*/}
     </div>
+
+    <div className="spacer"/>
 
     <div className="right">
       {rightControls}

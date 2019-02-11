@@ -367,7 +367,7 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
     <div className={classes.container}>
       <VerticalSplitPane
 
-        defaultSize={notificationsSplitter}
+        defaultSize={notificationsOpen ? notificationsSplitter : 0}
         primary="second"
 
         minSize={notificationsOpen ? 300 : 0}
