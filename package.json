@@ -1,6 +1,6 @@
 {
   "name": "epictask",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
@@ -161,7 +161,9 @@
   "build": {
     "productName": "Epictask",
     "mac": {
-      "publish": ["github"]
+      "publish": [
+        "github"
+      ]
     }
   },
   "electronWebpack": {
