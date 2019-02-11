@@ -48,7 +48,7 @@ function makeDarkThemeExt() {
     focusColorText = action.contrastText,
     outlineFocused = `inset 0px 0px 0.1rem 0.1rem ${focusColor}`,
     //headerBg = `content-box radial-gradient(${lighten(primary.main, 0.2)}, ${lighten(primary.main, 0.5)})`,
-    headerBg = `content-box radial-gradient(#DBDBDB, #DEDEDE)`,
+    headerBg = `content-box radial-gradient(#2B2B2B, #2E2E2E)`,
     outline = {
       "&::after": [PositionAbsolute, Fill, makeTransition('box-shadow'), {
         top: 0,

@@ -155,7 +155,7 @@
     "build": "npm run compile && electron-builder -c.compression=store \"-c.mac.identity=Densebrain, Inc\"",
     "build:nosign": "npm run compile && electron-builder -c.compression=store -c.mac.identity=null",
     "build:dir": "npm run compile && electron-builder --dir -c.compression=store -c.mac.identity=null",
-    "release": "npm version patch && npm run build && electron-builder -c.compression=store \"-c.mac.identity=Densebrain, Inc\" --publish always",
+    "release": "npm version patch && npm run compile && electron-builder -c.compression=store \"-c.mac.identity=Densebrain, Inc\" --publish always",
     "storybook": "start-storybook -p 9001 -c .storybook"
   },
   "build": {
