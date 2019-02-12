@@ -152,10 +152,15 @@
   "scripts": {
     "dev": "electron-webpack dev",
     "compile": "cross-env PACKAGE=true NODE_ENV=development electron-webpack",
-    "build": "npm run compile && electron-builder -c.compression=store \"-c.mac.identity=Densebrain, Inc\"",
+    "build:mac": "npm run compile && electron-builder -c.compression=store \"-c.mac.identity=Densebrain, Inc\"",
+    "build:linux": "npm run compile && electron-builder -l",
+    "build:win": "npm run compile && electron-builder -w",
     "build:nosign": "npm run compile && electron-builder -c.compression=store -c.mac.identity=null",
     "build:dir": "npm run compile && electron-builder --dir -c.compression=store -c.mac.identity=null",
-    "release": "npm version patch && npm run compile && electron-builder -c.compression=store \"-c.mac.identity=Densebrain, Inc\" --publish always",
+    "publish:mac": "npm run compile && electron-builder -c.compression=store \"-c.mac.identity=Densebrain, Inc\" --publish always",
+    "publish:linux": "npm run compile && electron-builder -l --publish always",
+    "publish:win": "npm run compile && electron-builder -w --publish always",
+    "release": "npm version patch && npm run publish:mac && npm run publish:linux && npm run publish:win",
     "storybook": "start-storybook -p 9001 -c .storybook"
   },
   "build": {

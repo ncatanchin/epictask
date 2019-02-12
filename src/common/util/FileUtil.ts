@@ -2,6 +2,7 @@ import * as Electron from "electron"
 import * as Path from 'path'
 import * as Fs from 'fs'
 import getLogger from "common/log/Logger"
+import {isWindows} from "common/ElectronUtil"
 
 const log = getLogger(__filename)
 
@@ -9,7 +10,7 @@ export function mkdirs(dir:string):boolean {
   const parts = dir.split(Path.sep).filter(part => part && part.length)
   let path = ""
   for (const part of parts) {
-    path = `${path}${Path.sep}${part}`
+    path = `${path}${path.isEmpty() && isWindows() ? "" : Path.sep}${part}`
     if (!Fs.existsSync(path)) {
       log.info("Making dir", path)
       Fs.mkdirSync(path)
