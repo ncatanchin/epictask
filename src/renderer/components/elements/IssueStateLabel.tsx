@@ -5,7 +5,7 @@ import {
   StyleDeclaration,
   withStatefulStyles,
   NestedStyles,
-  FlexRowCenter, makePaddingRem, rem, mergeClasses, makeTransition, Transparent, makeDimensionConstraints
+  FlexRowCenter, makePaddingRem, rem, mergeClasses, makeTransition, Transparent, makeDimensionConstraints, important
 } from "renderer/styles/ThemedStyles"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {IIssue} from "common/models/Issue"
@@ -42,23 +42,33 @@ function baseStyles(theme: Theme): StyleDeclaration {
       fontSize: rem(1),
       borderRadius: rem(1),
       backgroundColor: Transparent,
-      color: (props:P) => {
-        const
-          code = props.variant === "contrast" ? "contrastText" : "main",
-          palette = props.issue.pull_request ? pr :
-            props.issue.state === "closed" ? closed :
-              open
+      "&, & *": {
+        color: (props: P) => {
+          if (props.variant === "inherit")
+            return "inherit"
 
-        return palette[code]
+          const
+            code = props.variant === "contrast" ? "contrastText" : "main",
+            palette = props.issue.pull_request ? pr :
+              props.issue.state === "closed" ? closed :
+                open
+
+          return palette[code]
+        }
       },
       transform: "scale(1,1)",
       "&.editable.issue.hover": [{
-        color: (props:P) => {
-          const
-            code = props.variant === "contrast" ?  "main" : "contrastText",
-            palette = props.issue.state === "closed" ? open : closed
+        "&, & *": {
+          color: (props: P) => {
+            if (props.variant === "inherit")
+              return "inherit"
 
-          return palette[code]
+            const
+              code = props.variant === "contrast" ? "main" : "contrastText",
+              palette = props.issue.state === "closed" ? open : closed
+
+            return palette[code]
+          }
         },
         backgroundColor: (props:P) => {
           const
@@ -75,7 +85,7 @@ function baseStyles(theme: Theme): StyleDeclaration {
 }
 
 interface P extends IThemedProperties {
-  variant?:"contrast" | "normal"
+  variant?:"contrast" | "normal" | "inherit"
   issue:IIssue
 }
 
@@ -100,7 +110,7 @@ export default StyledComponent<P>(baseStyles, selectors)(function IssueStateLabe
 
   return <ReactHoverObserver>
     {({isHovering}) => <div className={mergeClasses(classes.root,editable && "editable",!issue.pull_request && "issue", className, isHovering && "hover")} {...other} {...editProps}>
-      <Octicon icon={issue.pull_request ? PullRequestIcon :
+      <Octicon className="icon" icon={issue.pull_request ? PullRequestIcon :
         (isHovering ?
           (issue.state === "closed" ? OpenIcon : ClosedIcon)
         :(issue.state === "closed" ? ClosedIcon : OpenIcon))}/>

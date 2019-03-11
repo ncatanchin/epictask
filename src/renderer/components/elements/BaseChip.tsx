@@ -1,6 +1,8 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
 import {
+  alpha,
+  important,
   IThemedProperties, makeHeightConstraint,
   mergeClasses, rem,
   StyleDeclaration,
@@ -13,6 +15,7 @@ import {getContrastText} from "renderer/styles/MaterialColors"
 import {Chip} from "@material-ui/core"
 import Tooltip from "@material-ui/core/Tooltip/Tooltip"
 import * as _ from 'lodash'
+import {elevationStyles} from "renderer/components/elements/Elevation"
 
 const log = getLogger(__filename)
 
@@ -23,12 +26,30 @@ function baseStyles(theme): StyleDeclaration {
     {primary, secondary} = palette,
     smallDim = Chip.dimen.small,
     normalDim = Chip.dimen.normal,
-    getDim = ({variant}:P):number | string => rem(variant === "small" ? smallDim : normalDim)
+    getDim = ({variant}:P):number | string => rem(variant === "small" ? smallDim : normalDim),
+    colorProps = {
+      "&, & *": {
+        color: ({opaque = true, color: inColor}: P): string => {
+          const
+            cssColor = inColor[0] === 'r' || inColor[0] === '#' ? inColor : `#${inColor}`,
+            color = opaque ? getContrastText(cssColor) : cssColor
+
+
+          return color//`${color} !important`
+        }
+      }
+    }
 
   return {
-    chip: [makeHeightConstraint(getDim)],
-    label: [],
-    action: []
+    chip: {
+      ...makeHeightConstraint(getDim),
+      ...colorProps,
+      border: `0.5px solid ${alpha("#000000",0.5)}`
+    },
+    label: {
+      ...colorProps
+    },
+    action: {}
   }
 }
 
@@ -57,18 +78,21 @@ export default class BaseChip extends React.Component<P> {
 
   render() {
     const
-      {tooltip, leftIcon,onClick, innerRef, classes, color, label, className, opaque, style, actionIcon, onAction} = _.omit(this.props,"childrenClassName") as P,
-      cssColor = color[0] === 'r' || color[0] === '#' ? color : `#${color}`,
+      {tooltip, leftIcon,onClick, innerRef, classes, color:inColor, label, className, opaque = true, style, actionIcon, onAction} = _.omit(this.props,"childrenClassName") as P,
+      cssColor = inColor[0] === 'r' || inColor[0] === '#' ? inColor : `#${inColor}`,
+      color = opaque ? getContrastText(cssColor) : cssColor,
       chip = <Chip
         innerRef={innerRef}
+        color="default"
         style={opaque ? {
           backgroundColor: cssColor,
-          color: getContrastText(cssColor),
-          ...style
+          color,
+          ...style,
+          //...elevationStyles.elevation6
         } : {
           backgroundColor: Transparent,
           border: `${rem(0.1)} solid ${cssColor}`,
-          color: cssColor,
+          color,
           ...style
         }}
         avatar={leftIcon}
@@ -82,6 +106,8 @@ export default class BaseChip extends React.Component<P> {
         onDelete={onAction}
         onClick={onClick}
       />
+
+    //log.info("Setting color", color)
 
     return tooltip ?
       <Tooltip

@@ -3,7 +3,7 @@ import {useCallback, useMemo, useRef, useState} from "react"
 import * as ReactDOM from "react-dom"
 import getLogger from "common/log/Logger"
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faCircle as FASolidCircle,faBell as FASolidBell} from "@fortawesome/pro-solid-svg-icons"
+import {faCircle as FASolidCircle, faBell as FASolidBell} from "@fortawesome/pro-solid-svg-icons"
 import {faBell as FALightBell} from "@fortawesome/pro-light-svg-icons"
 
 import {
@@ -20,7 +20,7 @@ import {
   makePaddingRem,
   mergeClasses, PositionAbsolute,
   PositionRelative,
-  rem
+  rem, StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {VerticalSplitPane} from "renderer/components/elements/VerticalSplitPane"
 import {IRepo} from "common/models/Repo"
@@ -54,6 +54,11 @@ import classNames from "classnames"
 import NotificationList from "renderer/components/elements/NotificationList"
 import {showRepoImportDialog} from "renderer/components/elements/RepoImportDialog"
 import EventHub from "common/events/Event"
+import issueSearchProvider from "renderer/search/SearchIssues"
+import SearchProviderField from "renderer/components/elements/SearchProviderField"
+import {ISearchChip} from "renderer/search/Search"
+import {IIssue} from "common/models/Issue"
+import {layoutSearchChipSelector, searchIssuesKey} from "renderer/store/selectors/UISelectors"
 
 const AvatarDefaultURL = require("renderer/assets/images/avatar-default.png")
 
@@ -69,8 +74,9 @@ declare global {
   }
 }
 
+type Classes = "root" | "header" | "controls" | "content" | "search" | "container" | "issueContainer" | "topContainer"
 
-function baseStyles(theme: Theme): any {
+function baseStyles(theme: Theme): StyleDeclaration<Classes> {
   const
     {palette, components: {IssuesLayout}} = theme,
     {action, notifications, primary, secondary, background} = palette
@@ -131,11 +137,25 @@ function baseStyles(theme: Theme): any {
       }
     },
     content: {...FlexScale, ...FlexColumnCenter, ...PositionRelative, ...Fill, ...FillWidth},
-    container: {...PositionRelative, ...FlexScale, ...FillWidth}
+    container: {...PositionRelative, ...FlexScale, ...FillWidth},
+    topContainer: {
+      ...FillWidth,
+      ...FlexAuto,
+      ...FlexRowCenter
+    },
+    search: {
+      ...FlexScale
+    },
+    issueContainer: {
+      ...FlexScale,
+      ...FlexColumnCenter,
+      ...PositionRelative,
+      ...FillWidth
+    }
   }
 }
 
-interface P extends IThemedProperties {
+interface P extends IThemedProperties<Classes> {
 
 }
 
@@ -148,6 +168,7 @@ interface SP {
   notificationsSplitter: number | string
   notificationsOpen: boolean
   notificationsUnreadCount: number
+  searchChips: Array<ISearchChip>
 }
 
 const selectors = {
@@ -158,8 +179,8 @@ const selectors = {
   splitter: (state: IRootRendererState) => state.UIState.splitters.issues,
   notificationsSplitter: (state: IRootRendererState) => state.UIState.splitters.notifications,
   notificationsOpen: (state: IRootRendererState) => state.UIState.notificationsOpen,
-  notificationsUnreadCount: notificationsUnreadSelector
-
+  notificationsUnreadCount: notificationsUnreadSelector,
+  searchChips: layoutSearchChipSelector
 }
 
 const appActions = new AppActionFactory()
@@ -167,7 +188,7 @@ const uiActions = new UIActionFactory()
 
 export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P & SP): React.ReactElement<P & SP> {
   const
-    {classes, repo, org, notificationsSplitter, notificationsUnreadCount, notificationsOpen, user, isRepoEnabled, splitter} = props,
+    {classes, repo, searchChips, org, notificationsSplitter, notificationsUnreadCount, notificationsOpen, user, isRepoEnabled, splitter} = props,
     hasUnreadNotifications = notificationsUnreadCount > 0,
     rootRef = useRef<any>(null),
     repoSelectRef = useRef<any>(null),
@@ -292,40 +313,23 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
       uiActions.setSplitter("notifications", newSize)
   }, [notificationsOpen])
 
-  const toggleNotificationsOpen = useCallback(() =>
-    new UIActionFactory().setNotificationsOpen(!notificationsOpen)
-  ,[notificationsOpen])
 
-  const rightControls = useMemo(() =>
-    <div className={mergeClasses(classes.controls, repoSelectOpen && "open")}>
-      <RepoSelect
-        id={CommonElementIds.RepoSelect}
-        selectRef={repoSelectRef}
-        onOpen={onRepoSelectOpen}
-        onSelection={onRepoSelection}
-        value={repo}
-      />
-      <Img
-        src={getValue(() => user.avatar_url)}
-        loader={<img src={AvatarDefaultURL}/>}
-      />
-
-      <IconButton
-        className={classNames("notificationsButton",{
-          unread: hasUnreadNotifications
-        })}
-        onClick={toggleNotificationsOpen}
-      >
-
-
-        {/* BADGE */}
-        {notificationsUnreadCount >= 100 ? <FontAwesomeIcon icon={FASolidCircle}/> :
-          hasUnreadNotifications ? <div className="badge">{notificationsUnreadCount}</div> :
-            <FontAwesomeIcon icon={FASolidBell}/>}
-
-      </IconButton>
-    </div>
-    , [toggleNotificationsOpen,repo, org, user, repoSelectOpen, notificationsUnreadCount, classes])
+  // const rightControls = useMemo(() =>
+  //     <div className={mergeClasses(classes.controls, repoSelectOpen && "open")}>
+  //       {/*<RepoSelect*/}
+  //       {/*  id={CommonElementIds.RepoSelect}*/}
+  //       {/*  selectRef={repoSelectRef}*/}
+  //       {/*  onOpen={onRepoSelectOpen}*/}
+  //       {/*  onSelection={onRepoSelection}*/}
+  //       {/*  value={repo}*/}
+  //       {/*/>*/}
+  //       {/*<Img*/}
+  //       {/*  src={getValue(() => user.avatar_url)}*/}
+  //       {/*  loader={<img src={AvatarDefaultURL}/>}*/}
+  //       {/*/>*/}
+  //
+  //     </div>
+  //   , [repo, org, user, repoSelectOpen, notificationsUnreadCount, classes])
 
   const renderSelectRepo = useCallback((): JSX.Element => {
     return <div className={classes.content}>
@@ -333,27 +337,43 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
     </div>
   }, [classes])
 
-  const renderRepoIsNotEnabled = useCallback((): JSX.Element => {
-    return <div className={mergeClasses(classes.content, "enable")}>
-      <Typography variant="h2">Enable <span className="repo">{repo.full_name}</span>?</Typography>
-      <IconButton className="button" onClick={() => appActions.enableRepo(repo)}>
-        <CheckIcon className="icon"/>
-      </IconButton>
-    </div>
-  }, [classes, repo])
+  const
+    renderRepoIsNotEnabled = useCallback((): JSX.Element => {
+      return <div className={mergeClasses(classes.content, "enable")}>
+        <Typography variant="h2">Enable <span className="repo">{repo.full_name}</span>?</Typography>
+        <IconButton className="button" onClick={() => appActions.enableRepo(repo)}>
+          <CheckIcon className="icon"/>
+        </IconButton>
+      </div>
+    }, [classes, repo]),
+    onSearchChipsChanged = useCallback((newSearchChips: Array<ISearchChip<IIssue, number, any>>) => {
+      new UIActionFactory().updateLayoutSearchChips(newSearchChips)
+    }, [])
 
   const renderIssues = useCallback((): JSX.Element => {
     return <div className={classes.content}>
+      <div className={classes.topContainer}>
+        <SearchProviderField
+          id={CommonElementIds.IssueSearch}
+          classes={{
+            root: classes.search
+          }}
+          provider={issueSearchProvider}
+          onChanged={onSearchChipsChanged}
+          chips={searchChips}
+        />
+      </div>
+      <div className={classes.issueContainer}>
+        <VerticalSplitPane
+          defaultSize={splitter}
+          minSize={400}
+          onChange={onSplitterChange}
+        >
+          <IssueList/>
+          <IssueDetails/>
 
-      <VerticalSplitPane
-        defaultSize={splitter}
-        minSize={400}
-        onChange={onSplitterChange}
-      >
-        <IssueList/>
-        <IssueDetails/>
-
-      </VerticalSplitPane>
+        </VerticalSplitPane>
+      </div>
     </div>
 
   }, [classes, splitter, onSplitterChange])
@@ -363,13 +383,12 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
     className={classes.root}
     {...commandManagerProps}
   >
-    <Header rightControls={rightControls}/>
+    <Header />
+
     <div className={classes.container}>
       <VerticalSplitPane
-
         defaultSize={notificationsOpen ? notificationsSplitter : 0}
         primary="second"
-
         minSize={notificationsOpen ? 300 : 0}
         maxSize={notificationsOpen ? "50%" : 0}
       >
@@ -379,7 +398,7 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function (props: P 
             renderRepoIsNotEnabled() :
             renderIssues()
         }
-        <NotificationList />
+        <NotificationList/>
       </VerticalSplitPane>
     </div>
   </div>

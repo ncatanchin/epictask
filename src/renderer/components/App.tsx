@@ -33,25 +33,27 @@ export function getRouterHistory():any {
   return history
 }
 
-function baseStyles(): StyleDeclaration {
+type Classes = "app" | "@global"
+
+function baseStyles(): StyleDeclaration<Classes> {
   return {
-    app: [FillWindow, FlexColumn, {
-      "& .content": [FlexScale, FillWidth, PositionRelative]
-    }],
+    app: {...FillWindow, ...FlexColumn,
+      "& .content": {...FlexScale, ...FillWidth, ...PositionRelative}
+    },
     "@global": {
-      ".auth0-lock-container": [{
+      ".auth0-lock-container": {
         zIndex: 20000
-      }]
+      }
     }
-  } as any
+  }
 }
 
 interface SP {
 }
 
-const selectors: Selectors<IThemedProperties, SP> = {}
+const selectors: Selectors<IThemedProperties<Classes>, SP> = {}
 
-export default StyledComponent<IThemedProperties, SP>(baseStyles, selectors)(function App(props: IThemedProperties & SP): React.ReactElement<IThemedProperties> {
+export default StyledComponent<IThemedProperties<Classes>, SP>(baseStyles, selectors)(function App(props: IThemedProperties<Classes> & SP): React.ReactElement<IThemedProperties<Classes>> {
   const
     {classes} = props
 

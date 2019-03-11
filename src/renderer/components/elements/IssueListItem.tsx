@@ -74,10 +74,17 @@ declare global {
   }
 }
 
-function getColorCode({selected,info,issue}:P):string {
-  return selected || info ?
-    (issue.pull_request ? "pr" : (issue.state || "open")) :
-    "normal"
+export type IssueListItemVariant = "header" | "listItem"
+
+function getColorCode({selected, info, issue}: P): string {
+  return selected ?
+    "selected" :
+    info ?
+      "info" :
+      "normal"
+  // return selected || info ?
+  //   (issue.pull_request ? "pr" : (issue.state || "open")) :
+  //   "normal"
 }
 
 function baseStyles(theme): any {
@@ -108,6 +115,10 @@ function baseStyles(theme): any {
       boxShadow: colorGetter("boxShadow")
     }],
     root: [FillWidth, FlexColumn, PositionRelative, CursorPointer, {
+      color: colorGetter("text"),
+      // "&, & *": {
+      //   color: colorGetter("text")
+      // },
       "&.info": [{
         minHeight: rem(5.5)
       }],
@@ -119,7 +130,8 @@ function baseStyles(theme): any {
             alignItems: 'center',
             [directChild("title")]: [FlexScale, makePaddingRem(0, 0.5, 0, 1), Ellipsis, {
               fontSize: rem(1.2),
-              fontWeight: 500
+              fontWeight: 500,
+              color: colorGetter("text")
             }],
             [directChild("metadata")]: [FlexAuto, {
               fontSize: rem(0.9),
@@ -136,13 +148,14 @@ function baseStyles(theme): any {
             //   textAlign: "right"
             // }]
           }],
-          [directChild("bottomRow")]: [FlexAuto, FillWidth, OverflowAuto, FlexRowCenter, makePaddingRem(0.3, 0.4, 0.5,0.7), {
+          [directChild("bottomRow")]: [FlexAuto, FillWidth, OverflowAuto, FlexRowCenter, makePaddingRem(0.3, 0.4, 0.5, 0.7), {
             // paddingLeft: theme.spacing.unit,
             [directChild("labelsContainer")]: [FlexScale, PositionRelative, makeMarginRem(0), {
-              overflowY: "hidden",
+              // overflowY: "visible",
               overflowX: "auto",
-              [directChild("labels")]: [OverflowHidden, FlexRow, {
-                overflowX: "visible",
+              [directChild("labels")]: [FlexRow, {
+                // overflowY: "visible",
+                // overflowX: "visible",
                 flexWrap: "nowrap"
               }]
             }]
@@ -194,6 +207,7 @@ function baseStyles(theme): any {
 }
 
 interface P extends IThemedProperties {
+  variant?: IssueListItemVariant
   issue: IIssue
   selected?: boolean
   info?: boolean
@@ -204,25 +218,25 @@ export default StyledComponent<P>(baseStyles, {withTheme: true})(function IssueL
 
   const
     {issue, classes, selected = false, info = false, style, theme, ...other} = props,
-    [prefix,setPrefix] = useState<string>(shortId),
+    [prefix, setPrefix] = useState<string>(shortId),
     onLabelsChanged = useCallback((labels: Array<ILabel>): void => {
-      uiTask("Updating Labels",async () => {
+      uiTask("Updating Labels", async () => {
         await patchIssueLabels(await getIssue(issue.id), labels)
       })
-    },[issue]),
+    }, [issue]),
     onMilestoneSelected = useCallback((milestone: IMilestone | null): void => {
-      uiTask("Updating Milestone",async () => {
+      uiTask("Updating Milestone", async () => {
         await patchIssueMilestone(issue.id, milestone)
       })
-    },[issue]),
+    }, [issue]),
     onCollaboratorsSelected = useCallback((collabs: Array<ICollaborator> | null): void => {
-      uiTask("Updating Assignees",async () => {
+      uiTask("Updating Assignees", async () => {
         await patchIssueAssignees(issue.id, collabs)
       })
-    },[issue])
+    }, [issue])
 
 
-  useEffect(() => setPrefix(shortId()),[issue.id])
+  useEffect(() => setPrefix(shortId()), [issue.id])
 
   return <div
     style={style}
@@ -235,7 +249,7 @@ export default StyledComponent<P>(baseStyles, {withTheme: true})(function IssueL
     <div className="content">
       <div className="main">
         <div className="top">
-          <IssueStateLabel variant={selected || info ? "contrast" : "normal"} issue={issue} />
+          <IssueStateLabel variant={selected ? "inherit" : "normal"} issue={issue}/>
           <Typography className="title" component="div">{issue.title}
           </Typography>
           <Typography className="metadata" component="div">

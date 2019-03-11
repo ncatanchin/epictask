@@ -15,6 +15,12 @@ import {appSelector} from "common/store/selectors/AppSelectors"
 import {getValue} from "typeguard"
 import LinearProgress from "@material-ui/core/LinearProgress/LinearProgress"
 import Divider from "@material-ui/core/Divider/Divider"
+import {IconButton} from "@material-ui/core"
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
+import {faBell as FASolidBell, faCircle as FASolidCircle} from "@fortawesome/pro-solid-svg-icons"
+import {useCallback} from "react"
+import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
+import {notificationsUnreadSelector} from "common/store/selectors/DataSelectors"
 
 const log = getLogger(__filename)
 
@@ -88,14 +94,24 @@ interface P extends IThemedProperties<Classes> {
 
 interface SP {
   status: IAppStatus
+  notificationsOpen: boolean
+  notificationsUnreadCount: number
 }
 
 const selectors = {
-  status: appSelector(state => state.status)
+  status: appSelector(state => state.status),
+  notificationsOpen: (state: IRootRendererState) => state.UIState.notificationsOpen,
+  notificationsUnreadCount: notificationsUnreadSelector
 } as Selectors<P, SP>
 
 export default StyledComponent<P, SP>(baseStyles, selectors)(function StatusBar(props: SP & P): React.ReactElement<P> {
-  const {classes, status} = props
+  const
+    {classes, status,notificationsOpen,notificationsUnreadCount} = props,
+    hasUnreadNotifications = notificationsUnreadCount > 0,
+    toggleNotificationsOpen = useCallback(() =>
+      new UIActionFactory().setNotificationsOpen(!notificationsOpen)
+    ,[notificationsOpen])
+
   return <div
     className={classNames(classes.root, {
       hidden: status.hidden
@@ -118,6 +134,20 @@ export default StyledComponent<P, SP>(baseStyles, selectors)(function StatusBar(
       </div>
       <div className="right">
 
+        <IconButton
+          className={classNames("notificationsButton",{
+            unread: hasUnreadNotifications
+          })}
+          onClick={toggleNotificationsOpen}
+        >
+
+
+          {/* BADGE */}
+          {notificationsUnreadCount >= 100 ? <FontAwesomeIcon icon={FASolidCircle}/> :
+            hasUnreadNotifications ? <div className="badge">{notificationsUnreadCount}</div> :
+              <FontAwesomeIcon icon={FASolidBell}/>}
+
+        </IconButton>
       </div>
     </div>
   </div>

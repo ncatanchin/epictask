@@ -42,7 +42,8 @@ function baseStyles(theme): any {
       }
     }],
     text: [{
-      fontWeight: 500
+      fontWeight: 500,
+      color: primary.contrastText
     }],
     picture: [
       PositionRelative,

@@ -26,7 +26,7 @@ function baseStyles(theme): StyleRules<Classes> {
   }
 }
 
-export type Selectors<Props = any,ReduxProps = any, State = IRootState> =
+export type Selectors<Props = any,ReduxProps = any, State = IRootRendererState> =
   {[K in keyof ReduxProps]: Selector<State, ReduxProps[K]>} |
   {[K in keyof ReduxProps]: ParametricSelector<State, ReduxProps & Props, ReduxProps[K]>}
 

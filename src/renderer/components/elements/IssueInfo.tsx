@@ -20,7 +20,7 @@ export default StyledComponent<P>(baseStyles)(function IssueInfo(props: P): Reac
     const {classes, issue,...other} = props
 
     return <>
-      <IssueListItem issue={issue} info />
+      <IssueListItem issue={issue} variant="header" info />
     </>
   }
 )

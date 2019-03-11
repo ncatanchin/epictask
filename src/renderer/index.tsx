@@ -16,7 +16,6 @@ import * as React from "react"
 import {loadAndInitStore} from "common/store/AppStore"
 import "renderer/store/UIAppStoreTypes"
 
-import * as _ from 'lodash'
 import * as $ from 'jquery'
 
 
@@ -74,6 +73,7 @@ async function renderRoot():Promise<void> {
 
   await (require('common/watchers/ConfigWatcher')).default
   await (require('common/watchers/DataWatcher')).default
+  await import("./GlobalCommands")
 
   doRender()
 }

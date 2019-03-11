@@ -10,7 +10,7 @@ import {
   makeTransition,
   OverflowHidden,
   PositionAbsolute,
-  PositionRelative,
+  PositionRelative, remToPx,
   StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {IIssue} from "common/models/Issue"
@@ -25,13 +25,9 @@ import {makeCommandManagerAutoFocus} from "common/command-manager"
 import FocusedDiv from "renderer/components/elements/FocusedDiv"
 import CommonElementIds from "renderer/CommonElements"
 import IssueViewController from "renderer/controllers/IssueViewController"
-import SearchProviderField from "renderer/components/elements/SearchProviderField"
-import issueSearchProvider from "renderer/search/SearchIssues"
 import {ISearchChip} from "renderer/search/Search"
 import {
-  searchIssuesChipsSelector,
-  searchIssuesDataSetSelector,
-  searchIssuesKey
+  currentLayoutDataSetSelector
 } from "renderer/store/selectors/UISelectors"
 import {UIActionFactory} from "renderer/store/actions/UIActionFactory"
 
@@ -95,18 +91,16 @@ interface P extends IThemedProperties {
 interface SP {
   sortedIssues: IDataSet<IIssue>
   selectedIssueIds: Array<number>
-  searchChips:Array<ISearchChip>
   controller: IssueViewController | null
 }
 
 export default StyledComponent<P,SP>(baseStyles,{
-  sortedIssues: searchIssuesDataSetSelector,
+  sortedIssues: currentLayoutDataSetSelector,
   selectedIssueIds: selectedIssueIdsSelector,
-  controller: (state:IRootRendererState) => state.UIState.issueViewController,
-  searchChips: searchIssuesChipsSelector
+  controller: (state:IRootRendererState) => state.UIState.issueViewController
 })(function IssueList(props: P & SP): React.ReactElement<P & SP> {
   const
-    {classes, searchChips, controller, selectedIssueIds, sortedIssues, ...other} = props,
+    {classes, controller, selectedIssueIds, sortedIssues, ...other} = props,
     id = CommonElementIds.IssueList,
     makeSelectedIndexes = ():Array<number> => selectedIssueIds
       .map(id => sortedIssues.data.findIndex(issue => issue.id === id) as number)
@@ -156,19 +150,10 @@ export default StyledComponent<P,SP>(baseStyles,{
     },[controller]),
 
     onSearchChipsChanged = useCallback((newSearchChips:Array<ISearchChip<IIssue,number,any>>) => {
-      new UIActionFactory().updateSearch(searchIssuesKey,newSearchChips)
+      new UIActionFactory().updateLayoutSearchChips(newSearchChips)
     },[])
 
   return <FocusedDiv classes={{root:classes.root}}>
-    <SearchProviderField
-      id={CommonElementIds.IssueSearch}
-      classes={{
-        root: classes.search
-      }}
-      provider={issueSearchProvider}
-      onChanged={onSearchChipsChanged}
-      chips={searchChips}
-    />
     <List
     id={id}
     dataSet={sortedIssues}
@@ -176,7 +161,7 @@ export default StyledComponent<P,SP>(baseStyles,{
     onSelectedIndexesChanged={updateSelectedIssues}
     selectedIndexes={selectedIndexes}
     rowRenderer={rowRenderer}
-    rowHeight={70}
+    rowHeight={remToPx(6)}
     classes={{
       root: classes.list
     }}

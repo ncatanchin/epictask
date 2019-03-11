@@ -115,24 +115,24 @@ const Shortcuts = [
 			BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache()
 		}
 	},
-	{
-		accelerator: 'CommandOrControl+Shift+Plus',
-		handler: async ():Promise<void> => {
-			let zoom = await getZoomFactor()
-			zoom = Math.min(zoom + 0.2, 2.0)
-			log.info(`Setting zoom: ${zoom}`)
-			BrowserWindow.getAllWindows().forEach(win => win.webContents.setZoomFactor(zoom))
-		}
-	},
-	{
-		accelerator: 'CommandOrControl+Shift+-',
-		handler: async ():Promise<void> => {
-			let zoom = await getZoomFactor()
-			zoom = Math.max(zoom - 0.2, 0.6)
-			log.info(`Setting zoom: ${zoom}`)
-			BrowserWindow.getAllWindows().forEach(win => win.webContents.setZoomFactor(zoom))
-		}
-	}
+	// {
+	// 	accelerator: 'CommandOrControl+Shift+Plus',
+	// 	handler: async ():Promise<void> => {
+	// 		let zoom = await getZoomFactor()
+	// 		zoom = Math.min(zoom + 0.2, 2.0)
+	// 		log.info(`Setting zoom: ${zoom}`)
+	// 		BrowserWindow.getAllWindows().forEach(win => win.webContents.setZoomFactor(zoom))
+	// 	}
+	// },
+	// {
+	// 	accelerator: 'CommandOrControl+Shift+-',
+	// 	handler: async ():Promise<void> => {
+	// 		let zoom = await getZoomFactor()
+	// 		zoom = Math.max(zoom - 0.2, 0.6)
+	// 		log.info(`Setting zoom: ${zoom}`)
+	// 		BrowserWindow.getAllWindows().forEach(win => win.webContents.setZoomFactor(zoom))
+	// 	}
+	// }
 
 ]
 

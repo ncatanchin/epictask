@@ -4,7 +4,7 @@ import {Color as CSSColor} from "csstype"
 import {
   alpha,
   Ellipsis, Fill,
-  IThemePalette, makeDimensionConstraints, makePaddingRem,
+  IThemePalette, makeDimensionConstraints, makeLinearGradient, makePaddingRem,
   makeTransition,
   mergeStyles, NestedStyles,
   OverflowHidden, PositionAbsolute, PositionRelative,
@@ -23,17 +23,23 @@ const log = getLogger(__filename)
 /**
  * Global theme/palette used throughout Saffron
  */
+const secondary = makeMaterialPalette("#9c27b0", "A200", "A400", "A700")
+
 const darkPalette = {
   type: "dark",
-  primary: makeMaterialPalette("#555555", "A200", "A400", "A700"), // app icons and text
-  secondary: makeMaterialPalette("#445fe9", "A200", "A400", "A700"),
-  background: makeMaterialPalette("#555555", "A200", "A400", "A700"),
+  //primary: makeMaterialPalette("#29293a", "A200", "A400", "A700"), // app icons and text
+  primary: makeMaterialPalette("#616161", "700", "900", "800"), // app icons and text
+
+  secondary,
+  // secondary: makeMaterialPalette("#4ddbad", "A200", "A400", "A700"),
+  background: makeMaterialPalette("#212141", "A200", "A400", "A700"),
   text: makeMaterialPalette("rgba(0,0,0,0.8)", "A200", "A400", "A700"),
   textNight: makeMaterialPalette("#FFFFFF", "A200", "A400", "A700"),
   error: makeMaterialPalette("#ff3633", "A200", "A400", "A700"),
   success: makeMaterialPalette("#3cff32", "A200", "A400", "A700"),
-  action: makeMaterialPalette("#5054ff", "A200", "A400", "A700"),
-  open: makeMaterialPalette("#22993E", "A200", "A400", "A700"),
+  action: secondary,
+  //action: makeMaterialPalette("#4ddbad", "A200", "A400", "A700"),
+  open: makeMaterialPalette("#4ddbad", "A200", "A400", "A700"),
   closed: makeMaterialPalette("#dd2b2c", "A200", "A400", "A700"),
   notifications: makeMaterialPalette("#ff3633", "A200", "A400", "A700"),
   pr: makeMaterialPalette("#C297FF", "A200", "A400", "A700")
@@ -46,9 +52,13 @@ function makeDarkThemeExt() {
     {action, primary, secondary, open, closed, pr} = darkPalette,
     focusColor = action.main,
     focusColorText = action.contrastText,
-    outlineFocused = `inset 0px 0px 0.1rem 0.1rem ${focusColor}`,
+    outlineFocused = `inset 0px 0px 1px 1px ${alpha(focusColor,0.65)}`,
     //headerBg = `content-box radial-gradient(${lighten(primary.main, 0.2)}, ${lighten(primary.main, 0.5)})`,
-    headerBg = `content-box radial-gradient(#2B2B2B, #2E2E2E)`,
+    // headerBg = `content-box linear-gradient(${lighten("#27212a",0.10)},#27212a)`,
+    // statusBg = `content-box linear-gradient(${lighten("#27212a",0.10)},#27212a)`,//`content-box linear-gradient(#27212a,${lighten("#27212a",0.10)})`,
+    headerBg = `content-box linear-gradient(${darken(primary.main,0.20)},${darken(primary.main,0.25)})`,
+    statusBg = `content-box linear-gradient(${darken(secondary.main,0.10)},${darken(secondary.main,0.15)})`,//`content-box linear-gradient(#27212a,${lighten("#27212a",0.10)})`,
+    statusText = secondary.contrastText,
     outline = {
       "&::after": [PositionAbsolute, Fill, makeTransition('box-shadow'), {
         top: 0,
@@ -129,7 +139,7 @@ function makeDarkThemeExt() {
         splitter: darken(primary.dark, 0.8),
         splitterHover: action.main,
         pane1Bg: darken(primary.dark, 0.2),
-        pane2Bg: primary.dark
+        pane2Bg: primary["700"]
       }
     },
     Milestone = {
@@ -148,13 +158,13 @@ function makeDarkThemeExt() {
     IssueDetails = {
       colors: {
         none: darken(primary.contrastText, 0.4),
-        bg: darken(primary.dark, 0.8),
+        bg: darken(primary.dark,0.6),
         commentHeader: primary.contrastText,
         commentHeaderBg: primary.main,
         commentBorder: darken(primary.main, 0.8),
         commentBodyBg: darken(primary.main, 0.3),
         commentText: primary.contrastText,
-        connection: darken(primary.main, 0.6),
+        connection: primary.main,
         focusColor,
         focusColorText
       }
@@ -163,9 +173,10 @@ function makeDarkThemeExt() {
     IssueListItem = {
       colors: Run(() => {
         const
+          bgStartColor = darken(primary.main, 0.25),
           normal = {
-            bg: `border-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
-            labelScrollFade: darken(primary.dark, 0.4),//`$, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
+            bg: `border-box linear-gradient(${bgStartColor}, ${darken(primary.main, 0.35)})`,//darken(primary.dark,0.4),
+            labelScrollFade: bgStartColor,//`$, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
             metadata: darken(primary.contrastText, 0.7),
             //updatedAt: darken(primary.contrastText, 0.7),
             subtitle: darken(primary.contrastText, 0.3),
@@ -173,25 +184,36 @@ function makeDarkThemeExt() {
             boxShadow: "inset 0 0 0.2rem 0.2rem rgba(10,10,10,0.3)",
             dividerBoxShadow: "0px 0rem 0.5rem 0.3rem rgba(3, 12, 7, 0.80)",
             outline: Transparent,
-            text: primary.contrastText,
+            text: darken(primary.contrastText,0.1),
             marker: Transparent
           },
           // eslint-disable-next-line
-          makeStatusColor = (color: Color) => ({
+          makeSubStyle = (
+            color: Color,
+            text:string = color.contrastText,
+            bg:string = `border-box linear-gradient(${color.main}, ${lighten(color.main, 0.2)})`
+          ) => ({
             ...normal,
-            bg: `border-box radial-gradient(${color.main}, ${lighten(color.main, 0.2)})`,//darken(primary.dark,0.4),
+            bg,//darken(primary.dark,0.4),
             topBg: Transparent,//`border-box radial-gradient(${lighten(color.main, 0.1)}, ${lighten(color.main, 0.3)})`,
             labelScrollFade: lighten(color.main, 0.1),//`$, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
-            metadata: lighten(color.contrastText, 0.7),
-            subtitle: lighten(color.contrastText, 0.3)
+            metadata: lighten(color.contrastText, 0.2),
+            text,
+            subtitle: lighten(color.contrastText, 0.1)
           })
 
 
         return {
           normal,
-          open: makeStatusColor(open),
-          closed: makeStatusColor(closed),
-          pr: makeStatusColor(pr)
+          selected: makeSubStyle(secondary),
+          info: makeSubStyle(
+            primary,
+            darken(primary.contrastText,0.1),
+            `border-box linear-gradient(${darken(primary.light, 0.1)}, ${darken(primary.light, 0.2)})`
+          ),
+          open: makeSubStyle(open),
+          closed: makeSubStyle(closed),
+          pr: makeSubStyle(pr)
         }
 
       })
@@ -199,7 +221,8 @@ function makeDarkThemeExt() {
     },
     Header = {
       colors: {
-        bg: headerBg,
+        //bg: headerBg,
+        bg: makeLinearGradient('to top',`${primary.main} 0`,`${primary.light} 100%`),
         logoBg: action.main,
         logoBoxShadow: "inset 0 0 0.4rem rgba(10,10,10,0.5)",
         boxShadow: "0 0 1rem 0.4rem rgba(10,10,10,0.5)"
@@ -256,19 +279,21 @@ function makeDarkThemeExt() {
         bg: darken(primary.main, 0.9)
       }
     },
-    StatusBar = {
-      colors: {
-        bg: `content-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,
-        text: darken(primary.contrastText, 0.2),
-        progressBar: darken(primary.contrastText, 0.5),
-        progress: action.main,
-        divider: `inset -0.1rem 0.2rem 0.1rem -0.1rem ${lighten(primary.main, 0.1)}`
-      },
-      dimensions: {
-        height: rem(2),
-        progressHeight: rem(0.2)
+    StatusBar = Run(() => {
+      return {
+        colors: {
+          bg: statusBg,
+          text: statusText,
+          progressBar: darken(primary.contrastText, 0.5),
+          progress: action.main,
+          divider: `inset -0.1rem 0.2rem 0.1rem -0.1rem ${lighten(primary.dark, 0.1)}`
+        },
+        dimensions: {
+          height: rem(2),
+          progressHeight: rem(0.2)
+        }
       }
-    },
+    }),
     Notifications = {
       colors: {},
       dimensions: {}
@@ -348,7 +373,7 @@ function makeDarkThemeExt() {
         return {
           normal,
           selected: makeStatusColor(action)
-        } as {[state:string]: {[code in ListItemColor]: CSSColor}}
+        } as { [state: string]: { [code in ListItemColor]: CSSColor } }
       })
     }
 
@@ -416,7 +441,7 @@ function makeDarkThemeExt() {
 
     focus: {
       ...makeTransition('box-shadow'),
-      boxShadow: `inset 0px 0px 0.1rem 0.1rem ${focusColor}`
+      boxShadow: outlineFocused//`inset 0px 0px 0.1rem 0.1rem ${focusColor}`
     },
 
     overrides: {

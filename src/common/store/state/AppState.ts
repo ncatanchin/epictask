@@ -32,7 +32,7 @@ export class AppState implements State<string> {
 
 	syncs:{[table:string]:IDataSyncStatus} = {}
 
-
+	zoom:number = 1
 
 	constructor(o:any = {}) {
 		Object.assign(this,o,{

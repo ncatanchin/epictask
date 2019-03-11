@@ -43,7 +43,7 @@ function baseStyles(theme: Theme): any {
   return {
     root: [FlexRow, FillWidth, {
       flexWrap: ({wrap = false}:P) => wrap ? "wrap" : "nowrap",
-      overflowY: ({wrap = false}:P) => wrap ? "auto" : "hidden",
+      overflowY: "visible",//({wrap = false}:P) => wrap ? "auto" : "hidden",
       overflowX: ({wrap = false}:P) => wrap ? "hidden": "auto"
     }],
     chip: {},

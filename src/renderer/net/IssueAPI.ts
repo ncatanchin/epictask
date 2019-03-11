@@ -271,7 +271,12 @@ export async function updateIssueEvents(issueId: number): Promise<IIssueEventDat
 
   const
     gh = getAPI(),
-    issue = await getIssue(issueId),
+    issue = await getIssue(issueId)
+  
+  if(!issue)
+    return null
+  
+  const  
     timestampId = `issue-data-${issueId}`,
     repo = await db.repos.where("url").equals(issue.repository_url).first(),
     newTimestamp = Date.now(),

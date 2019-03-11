@@ -380,27 +380,27 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
       this.emit(CommandManagerEvent.FocusChanged)
 
       // LOG THE FOCUS IDS
-      if (DEBUG && !process.env.isMainProcess && process.env.PACKAGE !== "true" && process.env.NODE_ENV !== "production") {
-        const $ = require('jquery')
-        $("#focusedContainers").remove()
-        $(`<div id="focusedContainers">${
-          focusedContainers
-            .map(it => {
-              const element = CommandManager.getContainerElement(it)
-              return element.id || `${element.tagName}`
-            })
-            .join(" >>> ")
-          }</div>`)
-          .css({
-            position: 'absolute',
-            right: 0,
-            bottom: 0,
-            background: 'white',
-            color: 'back',
-            zIndex: 100000
-          })
-          .appendTo($(document.body))
-      }
+      // if (DEBUG && !process.env.isMainProcess && process.env.PACKAGE !== "true" && process.env.NODE_ENV !== "production") {
+      //   const $ = require('jquery')
+      //   $("#focusedContainers").remove()
+      //   $(`<div id="focusedContainers">${
+      //     focusedContainers
+      //       .map(it => {
+      //         const element = CommandManager.getContainerElement(it)
+      //         return element.id || `${element.tagName}`
+      //       })
+      //       .join(" >>> ")
+      //     }</div>`)
+      //     .css({
+      //       position: 'absolute',
+      //       right: 0,
+      //       bottom: 0,
+      //       background: 'white',
+      //       color: 'back',
+      //       zIndex: 100000
+      //     })
+      //     .appendTo($(document.body))
+      // }
     }
   }
 
@@ -1137,13 +1137,24 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
     }
   }
 
+
+  unregisterCommands(...commands:ICommand[]) {
+    this.unregisterItems(commands)
+  }
+
+  registerCommands(...commands:ICommand[]) {
+    this.registerItems(commands)
+  }
+
+
+
   /**
    * Register commands
    *
    * @param commands
    * @param menuItems
    */
-  registerItems(commands: ICommand[], menuItems: ICommandMenuItem[]) {
+  registerItems(commands: ICommand[], menuItems: ICommandMenuItem[] = []) {
     const
       windowId = getWindowId(),
       expandId = (id: string): string => {
@@ -1206,7 +1217,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    * @param commands
    * @param menuItems
    */
-  unregisterItems(commands: ICommand[], menuItems: ICommandMenuItem[]) {
+  unregisterItems(commands: ICommand[], menuItems: ICommandMenuItem[] = []) {
     commands.forEach(cmd => {
       delete this.commands[cmd.id]
     })

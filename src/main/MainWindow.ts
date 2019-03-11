@@ -3,6 +3,7 @@ import {BrowserWindow} from "electron"
 import getLogger from "../common/log/Logger"
 import * as _ from 'lodash'
 import {isAuthenticated} from "./Auth"
+import {isMac} from "common/ElectronUtil"
 
 const log = getLogger(__filename)
 
@@ -57,13 +58,18 @@ export async function createMainWindow():Promise<BrowserWindow> {
 		defaultHeight: WindowMinHeight,
 	})
 
-	mainWindow = new BrowserWindow({
+	const opts = {
 		webPreferences: {webSecurity: true},
 		minHeight: WindowMinHeight,
 		minWidth: WindowMinWidth,
 		frame: false,
 		... _.pick(winState, 'x', 'y', 'width', 'height'),
-	})
+	} as Electron.BrowserWindowConstructorOptions
+
+	if (isMac())
+		opts.titleBarStyle = 'hidden'
+
+	mainWindow = new BrowserWindow(opts)
 
   mainWindow.hide()
 

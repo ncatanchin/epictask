@@ -23,7 +23,23 @@ export class AppActionFactory extends ActionFactory<AppState, ActionMessage<AppS
     return AppState.Key
   }
 
+  @ActionReducer()
+  setZoom(zoom:number) {
+    return (state:AppState) => patchState(state,{
+      zoom: Math.max(0.75,Math.min(2.5,zoom))
+    })
+  }
 
+
+  /**
+   * Zoom by an increment
+   *
+   * @param increment
+   * @returns {any}
+   */
+  zoom(increment:number) {
+    return this.setZoom(this.state.zoom + increment)
+  }
 
   @ActionReducer()
   setSelectedNotificationIds(selectedNotificationIds:Array<string>) {

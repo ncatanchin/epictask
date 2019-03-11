@@ -19,12 +19,15 @@ import {
 } from "renderer/styles/ThemedStyles"
 import {WindowControls} from "renderer/components/elements/WindowControls"
 import {remote} from "electron"
-import {StyledComponent} from "renderer/components/elements/StyledComponent"
+import {Selectors, StyledComponent} from "renderer/components/elements/StyledComponent"
+import {ILayoutConfig} from "renderer/store/state/UIState"
+import {currentLayoutSelector} from "renderer/store/selectors/UISelectors"
+import LayoutConfigSelector from "renderer/components/elements/LayoutConfigSelector"
 
 const log = getLogger(__filename)
 
 
-type Classes = "root"
+type Classes = "root" | "layoutSelector"
 
 function baseStyles(theme:Theme):StyleDeclaration<Classes> {
 	const
@@ -40,49 +43,18 @@ function baseStyles(theme:Theme):StyleDeclaration<Classes> {
 			...OverflowHidden,
 			background: Header.colors.bg,
 			boxShadow: Header.colors.boxShadow,
-			"& > .left, & > .right": {...FlexRowCenter, ...FillHeight,
 
-			},
-			"& > .left": {
-				justifyContent: "flex-start"
-			},
-			"& > .right": {
-				...FlexAuto,
-				justifyContent: "flex-end"
-			},
-
-			"&:hover > .logo .overlay": {
-				boxShadow: "inset 0 0 0.6rem rgba(100,100,100,0.8)"
-			},
-
-			"& > .logo": {
-				...FlexAuto,
-				...PositionRelative,
-				color: primary.main,
-				fontFamily: "Jura",
-				fontWeight: 400,
-				fontSize: rem(1.3),
-				paddingLeft: rem(1),
-				marginTop: rem(-0.2),
-				lineHeight: 1,
-				"-webkit-user-select": "none",
-				"-webkit-app-region": "drag",
-				"&, & *, &:hover, &:hover *": {
-					cursor: "move !important",
-				}
-			},
-			"& > .spacer": {
-				...FlexScale,
-        "-webkit-app-region": "drag"
-			}
+		},
+		layoutSelector: {
+			maxWidth: "70vw"
 		}
 	}
 }
 
 interface P extends IThemedProperties<Classes> {
-	rightControls?: React.ReactNode
-  leftControls?: React.ReactNode
+
 }
+
 
 function onDoubleClick():void {
 	const win = remote.getCurrentWindow()
@@ -94,7 +66,7 @@ function onDoubleClick():void {
 
 export default StyledComponent<P>(baseStyles)(function Header(props:P):React.ReactElement<P> {
   const
-    {classes,className,leftControls,rightControls} = props
+    {classes,className} = props
 
 
   return <div
@@ -102,19 +74,9 @@ export default StyledComponent<P>(baseStyles)(function Header(props:P):React.Rea
 		onDoubleClick={onDoubleClick}
 	>
 
-    <div className="left">
-      <WindowControls />
-      {leftControls}
+    <div className={classes.layoutSelector}>
+			<LayoutConfigSelector />
     </div>
 
-    <div className="logo">
-			epictask
-    </div>
-
-    <div className="spacer"/>
-
-    <div className="right">
-      {rightControls}
-    </div>
   </div>
 })

@@ -1,6 +1,6 @@
 import {ActionFactory, ActionReducer, ActionMessage, patchState} from "typedux"
 import getLogger from "common/log/Logger"
-import {UIState} from "../state/UIState"
+import {ILayoutConfig, UIState} from "../state/UIState"
 import IssueViewController from "renderer/controllers/IssueViewController"
 import {getValue} from "typeguard"
 import {DialogDefaults, IDialog} from "renderer/models/Dialog"
@@ -48,6 +48,13 @@ export class UIActionFactory extends ActionFactory<UIState, ActionMessage<UIStat
   // }
 
   @ActionReducer()
+  setCurrentLayoutConfig(layout:ILayoutConfig) {
+    return (state:UIState) => patchState(state,{
+      currentLayoutId: layout.id
+    })
+  }
+
+  @ActionReducer()
   showDialog(dialog:IDialog) {
     return (state:UIState) => {
       dialog = {...DialogDefaults, ...dialog}
@@ -57,18 +64,37 @@ export class UIActionFactory extends ActionFactory<UIState, ActionMessage<UIStat
       })
   }}
 
-
   @ActionReducer()
-  updateSearch(id:string,chips:Array<ISearchChip>) {
+  patchCurrentLayout(patch:Partial<ILayoutConfig>) {
+    return (state: UIState) => {
+      let layout = state.layouts.find(layout => layout.id === state.currentLayoutId)
+      if (layout) {
+
+        const
+          layouts = [...state.layouts],
+          index = layouts.findIndex(layout => layout.id === layout.id)
+
+        if (index > -1) {
+          layout = {...layout, ...patch}
+          layouts[index] = layout
+          return patchState(state, {
+            layouts
+          })
+        }
+      }
+      return state
+
+    }
+  }
+
+
+  updateLayoutSearchChips(chips:Array<ISearchChip>) {
     const data = chips.map(chip => chip.data())
     log.info("Setting chip data",data,chips)
-
-    return (state: UIState) => patchState(state, {
-      searches: {
-        ...state.searches,
-        [id]: data
-      }
+    this.patchCurrentLayout({
+      searchChips: data
     })
+
   }
 
   @ActionReducer()

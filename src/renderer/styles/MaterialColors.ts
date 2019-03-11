@@ -4,16 +4,16 @@ import {getContrastRatio} from "@material-ui/core/styles/colorManipulator"
 
 export type Contrast = 'light' | 'dark' | 'brown'
 export interface Color {
-    50: string
-    100: string
-    200: string
-    300: string
-    400: string
-    500: string
-    600: string
-    700: string
-    800: string
-    900: string
+    "50": string
+    "100": string
+    "200": string
+    "300": string
+    "400": string
+    "500": string
+    "600": string
+    "700": string
+    "800": string
+    "900": string
     A100: string
     A200: string
     A400: string
@@ -80,13 +80,13 @@ export function makeMaterialPalette(hex:string, light:PaletteAttribute | null = 
         palette[nextColor.name] = nextColor.hex
         return palette
     },{}) as Color
-    
+
     Array<[PaletteDefault,PaletteAttribute]>(["main",main],["light",light],["dark",dark])
       .filter(pair => isDefined(pair[1]))
       .forEach(([name,attr]) => {
           palette[name] = palette[attr]
       })
-    
+
     palette.contrastText = getContrastText(hex)
     return palette
 }
@@ -102,7 +102,7 @@ export function getContrastText(background:string):string {
     return  getContrastRatio(background, "#FFFFFF") >= contrastThreshold
         ? "#FFFFFF"
         : "#222222"
-    
+
     // if (process.env.NODE_ENV !== 'production') {
     //     const contrast = getContrastRatio(background, contrastText);
     //     warning(
@@ -114,6 +114,6 @@ export function getContrastText(background:string):string {
     //       ].join('\n'),
     //     );
     // }
-    
+
     //return contrastText;
 }

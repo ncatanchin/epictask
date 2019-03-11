@@ -414,3 +414,12 @@ export function directChild(className:string,state:string = ""):string {
 export function child(className:string,state:string = "",direct:boolean = false):string {
 	return `&${state.isEmpty() ? "" : `:${state}`} ${direct ? ">" : ""} .${className}`
 }
+
+export function important(value:string | number):string {
+	return `${value} !important`
+}
+
+export function makeLinearGradient(...colorStops:string[]):string {
+	//return `-webkit-linear-gradient(${colorStops.join(',')})`
+	return `linear-gradient(${colorStops.join(',')})`
+}

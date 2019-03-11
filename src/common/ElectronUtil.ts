@@ -2,6 +2,8 @@ import {get as _get} from 'lodash'
 import getLogger from "common/log/Logger"
 import {isMain} from "common/Process"
 import * as Electron from "electron"
+import {App} from "electron"
+
 const
 	log = getLogger(__filename)
 
@@ -139,4 +141,9 @@ export function getWindowId():number {
 
 export function getCurrentWindow():Electron.BrowserWindow {
 	return isMain() ? Electron.BrowserWindow.getFocusedWindow() : Electron.remote.getCurrentWindow()
+}
+
+
+export function getApp():Electron.App {
+	return Electron.remote ? Electron.remote.require("electron").app : Electron.app
 }

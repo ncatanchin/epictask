@@ -135,7 +135,9 @@ function IssueActivity(props: IssueTimelineEventProps<"activity">): React.ReactE
   return <div key={activity.id} className="activity">
     <div className="connection">
       <div className={mergeClasses("line", last && "last")}/>
-      <Octicon className="icon" icon={Icon}/>
+      <div className="iconWrapper">
+        <Octicon className="icon" icon={Icon}/>
+      </div>
     </div>
     <div className="content">
       {Builder(classes, issue, activity)}

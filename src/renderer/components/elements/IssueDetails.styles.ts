@@ -24,7 +24,7 @@ import {
 } from "renderer/styles/ThemedStyles"
 import {Color} from "csstype"
 import {Run} from "common/util/fn"
-import {darken} from "@material-ui/core/styles/colorManipulator"
+import {darken, lighten} from "@material-ui/core/styles/colorManipulator"
 
 declare global {
   type IssueDetailsColor =
@@ -110,15 +110,23 @@ export default function baseStyles(theme: Theme): StyleDeclaration {
                 top: 0,
                 background: colors.connection
               }],
-              [directChild("icon")]: [PositionAbsolute, makeDimensionConstraints(rem(1.4)), {
+              "& > .iconWrapper": {
+                ...PositionAbsolute,
+                ...FlexRowCenter,
+                ...makeDimensionConstraints(remToPx(1.4)),
                 left: `50%`,
                 top: `50%`,
-                marginLeft: `-0.7rem`,
-                marginTop: `-0.7rem`,
+                marginLeft: remToPx(-0.7),
+                marginTop: remToPx(-0.7),
                 borderRadius: rem(0.7),
-                background: colors.connection,
-                border: connectionBorder
-              }]
+                background: lighten(colors.connection,0.4),
+                border: connectionBorder,
+                "& > .icon": {
+                  ...FlexAuto,
+                  ...makeDimensionConstraints(rem(0.7)),
+                }
+              },
+
             }],
             [directChild("bottom")]: [PositionAbsolute, makeHeightConstraint(rem(0)), {
               bottom: 0,
@@ -131,7 +139,7 @@ export default function baseStyles(theme: Theme): StyleDeclaration {
 
           [directChild("comment")]: [makeTransition("backgroundColor"),PositionRelative, FlexAuto, FillWidth, OverflowHidden, makePaddingRem(0, 1, 0, 1), FlexRow, { //
             "&.focused": {
-              backgroundColor: darken(colors.commentBodyBg,0.4),
+              //backgroundColor: darken(colors.commentBodyBg,0.4),
             },
             "& > .commentInternal": [FlexScale, FlexRow, PositionRelative,{
               maxWidth: `calc(100% - ${rem(2)})`,
@@ -179,9 +187,12 @@ export default function baseStyles(theme: Theme): StyleDeclaration {
                   [directChild("top")]: [makeTransition(['backgroundColor','color','borderBottom']),makePaddingRem(0, 1), FlexAuto, FlexRowCenter, FillWidth, makeHeightConstraint(rem(2.2)), {
                     borderBottom: connectionBorder,
                     color: colors.commentText,
-                    [directChild("text")]: [Ellipsis, FlexScale],
-                    [directChild("editButton")]: [Button.overlayFAB, FlexRowCenter, CursorPointer, makeDimensionConstraints(dimensions.button.small * 1.5), {
+                    [directChild("text")]: [Ellipsis, FlexScale, {
+                      color: colors.commentText
+                    }],
+                    [directChild("editButton")]: [FlexRowCenter, CursorPointer, makeDimensionConstraints(dimensions.button.small * 1.5), {
                       marginLeft: theme.spacing.unit,
+                      color: colors.commentText,
                       // zIndex: 1,
                       // right: theme.spacing.unit / 2,
                       // top: theme.spacing.unit / 2,

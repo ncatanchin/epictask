@@ -10,7 +10,8 @@ export enum CommonElement {
   IssueList,
   IssueSearch,
   RepoSelect,
-  NotificationsList
+  NotificationsList,
+  LayoutSelector
 }
 
 export const CommonElementIds = convertEnumValuesToString(CommonElement)
